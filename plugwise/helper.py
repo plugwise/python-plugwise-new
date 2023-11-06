@@ -235,8 +235,6 @@ class SmileHelper:
         self._reg_allowed_modes: list[str] = []
         self._schedule_old_states: dict[str, dict[str, str]] = {}
         self._status: etree
-        self._stretch_v2 = False
-        self._stretch_v3 = False
         self._system: etree
         self._thermo_locs: dict[str, ThermoLoc] = {}
         ###################################################################
@@ -362,7 +360,7 @@ class SmileHelper:
         return appl  # pragma: no cover
 
     def _appliance_info_finder(self, appliance: etree, appl: Munch) -> Munch:
-        """Collect device info (Smile/Stretch, Thermostats, OpenTherm/On-Off): firmware, model and vendor name."""
+        """Collect device info (Smile, Thermostats, OpenTherm/On-Off): firmware, model and vendor name."""
         # Collect gateway device info
         if appl.pwclass == "gateway":
             self.gateway_id = appliance.attrib["id"]
@@ -517,7 +515,7 @@ class SmileHelper:
             appl.vendor_name = None
 
             # Determine class for this appliance
-            # Skip on heater_central when no active device present or on orphaned stretch devices
+            # Skip on heater_central when no active device present
             if not (appl := self._appliance_info_finder(appliance, appl)):
                 continue
 
@@ -1039,7 +1037,7 @@ class SmileHelper:
             group_type = group.find("type").text
             group_appliances = group.findall("appliances/appliance")
             for item in group_appliances:
-                # Check if members are not orphaned - stretch
+                # Check if members are not orphaned
                 if item.attrib["id"] in self.gw_devices:
                     members.append(item.attrib["id"])
 
@@ -1258,13 +1256,10 @@ class SmileHelper:
     def _get_lock_state(self, xml: etree, data: DeviceData) -> None:
         """Helper-function for _get_measurement_data().
 
-        Adam & Stretches: obtain the relay-switch lock state.
+        Adam: obtain the relay-switch lock state.
         """
         actuator = "actuator_functionalities"
         func_type = "relay_functionality"
-        if self._stretch_v2:
-            actuator = "actuators"
-            func_type = "relay"
         if xml.find("type").text not in SPECIAL_PLUG_TYPES:
             locator = f"./{actuator}/{func_type}/lock"
             if (found := xml.find(locator)) is not None:

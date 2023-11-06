@@ -683,8 +683,6 @@ class Smile(SmileComm, SmileData):
             locator = f'appliance[@id="{member}"]/{switch.actuator}/{switch.func_type}'
             switch_id = self._appliances.find(locator).attrib["id"]
             uri = f"{APPLIANCES};id={member}/{switch.device};id={switch_id}"
-            if self._stretch_v2:
-                uri = f"{APPLIANCES};id={member}/{switch.device}"
             data = f"<{switch.func_type}><{switch.func}>{state}</{switch.func}></{switch.func_type}>"
 
             await self._request(uri, method="put", data=data)
@@ -726,8 +724,6 @@ class Smile(SmileComm, SmileData):
                 break
 
         uri = f"{APPLIANCES};id={appl_id}/{switch.device};id={switch_id}"
-        if self._stretch_v2:
-            uri = f"{APPLIANCES};id={appl_id}/{switch.device}"
         data = f"<{switch.func_type}><{switch.func}>{state}</{switch.func}></{switch.func_type}>"
 
         if model == "relay":
