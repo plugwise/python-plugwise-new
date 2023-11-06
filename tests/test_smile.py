@@ -328,6 +328,9 @@ class TestPlugwise:  # pylint: disable=attribute-defined-outside-init
         except pw_exceptions.InvalidXMLError:
             _LOGGER.info(" + successfully passed XML issue handling.")
 
+        _LOGGER.info("Connecting to functioning device:")
+        return await self.connect()
+
     # Generic disconnect
     @classmethod
     @pytest.mark.asyncio
