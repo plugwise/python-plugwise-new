@@ -79,15 +79,6 @@ def check_model(name: str | None, vendor_name: str | None) -> str | None:
     return name
 
 
-def etree_to_dict(element: etree) -> dict[str, str]:
-    """Helper-function translating xml Element to dict."""
-    node: dict[str, str] = {}
-    if element is not None:
-        node.update(element.items())
-
-    return node
-
-
 def power_data_local_format(
     attrs: dict[str, str], key_string: str, val: str
 ) -> float | int:
