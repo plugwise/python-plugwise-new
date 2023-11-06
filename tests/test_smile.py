@@ -3047,7 +3047,7 @@ class TestPlugwise:  # pylint: disable=attribute-defined-outside-init
 
         await smile.close_connection()
         await self.disconnect(server, client)
- 
+
     @pytest.mark.asyncio
     async def test_connect_p1v4_442_single(self):
         """Test a P1 firmware 4.4 single-phase setup."""
