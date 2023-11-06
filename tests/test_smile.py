@@ -792,8 +792,6 @@ class TestPlugwise:  # pylint: disable=attribute-defined-outside-init
         assert smile.smile_type == "thermostat"
         _LOGGER.info(" # Assert version")
         assert smile.smile_version[0] == "4.0.15"
-        _LOGGER.info(" # Assert no legacy")
-        assert not smile._smile_legacy
 
         await self.device_test(smile, "2020-04-05 00:00:01", testdata)
         assert smile.gateway_id == "0466eae8520144c78afb29628384edeb"
@@ -927,8 +925,6 @@ class TestPlugwise:  # pylint: disable=attribute-defined-outside-init
         assert smile.smile_type == "thermostat"
         _LOGGER.info(" # Assert version")
         assert smile.smile_version[0] == "4.0.15"
-        _LOGGER.info(" # Assert no legacy")
-        assert not smile._smile_legacy
 
         await self.device_test(smile, "2020-04-05 00:00:01", testdata)
         assert smile._last_active["eb5309212bf5407bb143e5bfa3b18aee"] == "Standaard"
@@ -963,8 +959,6 @@ class TestPlugwise:  # pylint: disable=attribute-defined-outside-init
         assert smile.smile_type == "thermostat"
         _LOGGER.info(" # Assert version")
         assert smile.smile_version[0] == "4.0.15"
-        _LOGGER.info(" # Assert no legacy")
-        assert not smile._smile_legacy
 
         await self.device_test(smile, "2020-04-05 00:00:01", testdata)
         assert smile.device_items == 56
@@ -1034,8 +1028,6 @@ class TestPlugwise:  # pylint: disable=attribute-defined-outside-init
         assert smile.smile_type == "thermostat"
         _LOGGER.info(" # Assert version")
         assert smile.smile_version[0] == "4.2.1"
-        _LOGGER.info(" # Assert no legacy")
-        assert not smile._smile_legacy
 
         await self.device_test(smile, "2022-05-16 00:00:01", testdata)
         assert smile._last_active["c34c6864216446528e95d88985e714cc"] == "Test"
@@ -1288,8 +1280,6 @@ class TestPlugwise:  # pylint: disable=attribute-defined-outside-init
         _LOGGER.info("Basics:")
         _LOGGER.info(" # Assert version")
         assert smile.smile_version[0] == "3.6.4"
-        _LOGGER.info(" # Assert legacy")
-        assert not smile._smile_legacy
 
         await self.device_test(smile, "2022-01-16 00:00:01", testdata)
         assert smile.gateway_id == "da224107914542988a88561b4452b0f6"
@@ -2322,8 +2312,6 @@ class TestPlugwise:  # pylint: disable=attribute-defined-outside-init
         assert smile.smile_type == "thermostat"
         _LOGGER.info(" # Assert version")
         assert smile.smile_version[0] == "4.0.15"
-        _LOGGER.info(" # Assert no legacy")
-        assert not smile._smile_legacy
 
         await self.device_test(smile, "2020-04-12 00:00:01", testdata)
         assert smile.gateway_id == "015ae9ea3f964e668e490fa39da3870b"
@@ -2449,8 +2437,6 @@ class TestPlugwise:  # pylint: disable=attribute-defined-outside-init
         assert smile.smile_type == "thermostat"
         _LOGGER.info(" # Assert version")
         assert smile.smile_version[0] == "4.0.15"
-        _LOGGER.info(" # Assert no legacy")
-        assert not smile._smile_legacy
 
         await self.device_test(smile, "2020-04-19 00:00:01", testdata)
         assert smile._last_active["c784ee9fdab44e1395b8dee7d7a497d5"] == "standaard"
@@ -2644,8 +2630,6 @@ class TestPlugwise:  # pylint: disable=attribute-defined-outside-init
         assert smile.smile_type == "thermostat"
         _LOGGER.info(" # Assert version")
         assert smile.smile_version[0] == "4.2.1"
-        _LOGGER.info(" # Assert no legacy")
-        assert not smile._smile_legacy
 
         await self.device_test(smile, "2022-03-13 00:00:01", testdata)
         assert (
@@ -2805,8 +2789,6 @@ class TestPlugwise:  # pylint: disable=attribute-defined-outside-init
         assert smile.smile_type == "thermostat"
         _LOGGER.info(" # Assert version")
         assert smile.smile_version[0] == "4.2.1"
-        _LOGGER.info(" # Assert no legacy")
-        assert not smile._smile_legacy
 
         await self.device_test(smile, "2022-03-10 00:00:01", testdata)
         assert (
@@ -3119,8 +3101,6 @@ class TestPlugwise:  # pylint: disable=attribute-defined-outside-init
         assert smile.smile_type == "power"
         _LOGGER.info(" # Assert version")
         assert smile.smile_version[0] == "4.4.2"
-        _LOGGER.info(" # Assert legacy")
-        assert not smile._smile_legacy
 
         await self.device_test(smile, "2022-05-16 00:00:01", testdata)
         assert smile.gateway_id == "a455b61e52394b2db5081ce025a430f3"
@@ -3198,9 +3178,6 @@ class TestPlugwise:  # pylint: disable=attribute-defined-outside-init
         assert smile.smile_type == "power"
         _LOGGER.info(" # Assert version")
         assert smile.smile_version[0] == "4.4.2"
-        _LOGGER.info(" # Assert legacy")
-        assert not smile._smile_legacy
-
         await self.device_test(smile, "2022-05-16 00:00:01", testdata)
         assert smile.gateway_id == "03e65b16e4b247a29ae0d75a78cb492e"
         assert smile.device_items == 40
