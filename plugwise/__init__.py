@@ -315,9 +315,8 @@ class SmileData(SmileHelper):
             device_data["dhw_modes"] = self._dhw_allowed_modes
             self._count += 1
 
-        # Check availability of non-legacy wired-connected devices
-        if not self._smile_legacy:
-            self._check_availability(device, device_data)
+        # Check availability of wired-connected devices
+        self._check_availability(device, device_data)
 
         # Switching groups data
         device_data = self._device_data_switching_group(device, device_data)
@@ -365,10 +364,7 @@ class Smile(SmileComm, SmileData):
     async def connect(self) -> bool:
         """Connect to Plugwise device and determine its name, type and version."""
         result = await self._request(DOMAIN_OBJECTS)
-        # Work-around for Stretch fv 2.7.18
-        if not (vendor_names := result.findall("./module/vendor_name")):
-            result = await self._request(MODULES)
-            vendor_names = result.findall("./module/vendor_name")
+        vendor_names = result.findall("./module/vendor_name")
 
         names: list[str] = []
         for name in vendor_names:
@@ -403,54 +399,6 @@ class Smile(SmileComm, SmileData):
 
         return True
 
-    async def _smile_detect_legacy(
-        self, result: etree, dsmrmain: etree, model: str
-    ) -> str:
-        """Helper-function for _smile_detect()."""
-        # Stretch: find the MAC of the zigbee master_controller (= Stick)
-        if network := result.find("./module/protocols/master_controller"):
-            self.smile_zigbee_mac_address = network.find("mac_address").text
-        # Find the active MAC in case there is an orphaned Stick
-        if zb_networks := result.findall("./network"):
-            for zb_network in zb_networks:
-                if zb_network.find("./nodes/network_router"):
-                    network = zb_network.find("./master_controller")
-                    self.smile_zigbee_mac_address = network.find("mac_address").text
-
-        # Legacy Anna or Stretch:
-        if (
-            result.find('./appliance[type="thermostat"]') is not None
-            or network is not None
-        ):
-            self._system = await self._request(SYSTEM)
-            self.smile_fw_version = self._system.find("./gateway/firmware").text
-            model = self._system.find("./gateway/product").text
-            self.smile_hostname = self._system.find("./gateway/hostname").text
-            # If wlan0 contains data it's active, so eth0 should be checked last
-            for network in ("wlan0", "eth0"):
-                locator = f"./{network}/mac"
-                if (net_locator := self._system.find(locator)) is not None:
-                    self.smile_mac_address = net_locator.text
-        else:
-            # P1 legacy:
-            if dsmrmain is not None:
-                self._status = await self._request(STATUS)
-                self.smile_fw_version = self._status.find("./system/version").text
-                model = self._status.find("./system/product").text
-                self.smile_hostname = self._status.find("./network/hostname").text
-                self.smile_mac_address = self._status.find("./network/mac_address").text
-
-            else:  # pragma: no cover
-                # No cornercase, just end of the line
-                LOGGER.error(
-                    "Connected but no gateway device information found, please create"
-                    " an issue on http://github.com/plugwise/python-plugwise"
-                )
-                raise ResponseError
-
-        self._smile_legacy = True
-        return model
-
     async def _smile_detect(self, result: etree, dsmrmain: etree) -> None:
         """Helper-function for connect().
 
@@ -464,8 +412,6 @@ class Smile(SmileComm, SmileData):
             self.smile_hw_version = gateway.find("hardware_version").text
             self.smile_hostname = gateway.find("hostname").text
             self.smile_mac_address = gateway.find("mac_address").text
-        else:
-            model = await self._smile_detect_legacy(result, dsmrmain, model)
 
         if model == "Unknown" or self.smile_fw_version is None:  # pragma: no cover
             # Corner case check
@@ -490,10 +436,6 @@ class Smile(SmileComm, SmileData):
         self.smile_name = SMILES[self._target_smile].smile_name
         self.smile_type = SMILES[self._target_smile].smile_type
         self.smile_version = (self.smile_fw_version, ver)
-
-        if self.smile_type == "stretch":
-            self._stretch_v2 = self.smile_version[1].major == 2
-            self._stretch_v3 = self.smile_version[1].major == 3
 
         if self.smile_type == "thermostat":
             self._is_thermostat = True
@@ -542,9 +484,7 @@ class Smile(SmileComm, SmileData):
         await self._update_domain_objects()
         self._locations = await self._request(LOCATIONS)
         self._modules = await self._request(MODULES)
-        # P1 legacy has no appliances
-        if not (self.smile_type == "power" and self._smile_legacy):
-            self._appliances = await self._request(APPLIANCES)
+        self._appliances = await self._request(APPLIANCES)
 
     async def async_update(self) -> PlugwiseData:
         """Perform an incremental update for updating the various device states."""
@@ -565,11 +505,9 @@ class Smile(SmileComm, SmileData):
         else:
             await self._update_domain_objects()
             match self._target_smile:
-                case "smile_v2":
-                    self._modules = await self._request(MODULES)
-                case "smile_v3" | "smile_v4":
+                case "smile_v4":
                     self._locations = await self._request(LOCATIONS)
-                case "smile_open_therm_v2" | "smile_open_therm_v3":
+                case "smile_open_therm_v3":
                     self._appliances = await self._request(APPLIANCES)
                     self._modules = await self._request(MODULES)
                 case self._target_smile if self._target_smile in REQUIRE_APPLIANCES:
@@ -580,39 +518,6 @@ class Smile(SmileComm, SmileData):
 
         self._previous_day_number = day_number
         return PlugwiseData(self.gw_data, self.gw_devices)
-
-    async def _set_schedule_state_legacy(
-        self, loc_id: str, name: str, status: str
-    ) -> None:
-        """Helper-function for set_schedule_state()."""
-        schedule_rule_id: str | None = None
-        for rule in self._domain_objects.findall("rule"):
-            if rule.find("name").text == name:
-                schedule_rule_id = rule.attrib["id"]
-
-        if schedule_rule_id is None:
-            raise PlugwiseError("Plugwise: no schedule with this name available.")
-
-        new_state = "false"
-        if status == "on":
-            new_state = "true"
-        # If no state change is requested, do nothing
-        if new_state == self._schedule_old_states[loc_id][name]:
-            return
-
-        locator = f'.//*[@id="{schedule_rule_id}"]/template'
-        for rule in self._domain_objects.findall(locator):
-            template_id = rule.attrib["id"]
-
-        uri = f"{RULES};id={schedule_rule_id}"
-        data = (
-            "<rules><rule"
-            f' id="{schedule_rule_id}"><name><![CDATA[{name}]]></name><template'
-            f' id="{template_id}" /><active>{new_state}</active></rule></rules>'
-        )
-
-        await self._request(uri, method="put", data=data)
-        self._schedule_old_states[loc_id][name] = new_state
 
     def determine_contexts(
         self, loc_id: str, name: str, state: str, sched_id: str
@@ -654,10 +559,6 @@ class Smile(SmileComm, SmileData):
                 return
 
         assert isinstance(name, str)
-        if self._smile_legacy:
-            await self._set_schedule_state_legacy(loc_id, name, new_state)
-            return
-
         schedule_rule = self._rule_ids_by_name(name, loc_id)
         # Raise an error when the schedule name does not exist
         if not schedule_rule or schedule_rule is None:
@@ -686,24 +587,12 @@ class Smile(SmileComm, SmileData):
         await self._request(uri, method="put", data=data)
         self._schedule_old_states[loc_id][name] = new_state
 
-    async def _set_preset_legacy(self, preset: str) -> None:
-        """Set the given Preset on the relevant Thermostat - from DOMAIN_OBJECTS."""
-        locator = f'rule/directives/when/then[@icon="{preset}"].../.../...'
-        rule = self._domain_objects.find(locator)
-        data = f'<rules><rule id="{rule.attrib["id"]}"><active>true</active></rule></rules>'
-
-        await self._request(RULES, method="put", data=data)
-
     async def set_preset(self, loc_id: str, preset: str) -> None:
         """Set the given Preset on the relevant Thermostat - from LOCATIONS."""
         if (presets := self._presets(loc_id)) is None:
             raise PlugwiseError("Plugwise: no presets available.")  # pragma: no cover
         if preset not in list(presets):
             raise PlugwiseError("Plugwise: invalid preset.")
-
-        if self._smile_legacy:
-            await self._set_preset_legacy(preset)
-            return
 
         current_location = self._locations.find(f'location[@id="{loc_id}"]')
         location_name = current_location.find("name").text
@@ -828,10 +717,6 @@ class Smile(SmileComm, SmileData):
         if model == "lock":
             switch.func = "lock"
             state = "false" if state == "off" else "true"
-
-        if self._stretch_v2:
-            switch.actuator = "actuators"
-            switch.func_type = "relay"
 
         if members is not None:
             return await self._set_groupswitch_member_state(members, state, switch)
