@@ -67,7 +67,6 @@ class TestPlugwise:  # pylint: disable=attribute-defined-outside-init
         timeout=False,
         raise_timeout=False,
         fail_auth=False,
-        stretch=False,
     ):
         """Create mock webserver for Smile to interface with."""
         app = aiohttp.web.Application()
@@ -103,14 +102,9 @@ class TestPlugwise:  # pylint: disable=attribute-defined-outside-init
             app.router.add_route(
                 "DELETE", "/core/notifications{tail:.*}", self.smile_del_notification
             )
-            if not stretch:
-                app.router.add_route(
-                    "PUT", "/core/appliances{tail:.*}", self.smile_set_relay
-                )
-            else:
-                app.router.add_route(
-                    "PUT", "/core/appliances{tail:.*}", self.smile_set_relay_stretch
-                )
+            app.router.add_route(
+                "PUT", "/core/appliances{tail:.*}", self.smile_set_relay
+            )
         else:
             app.router.add_route("PUT", "/core/locations{tail:.*}", self.smile_timeout)
             app.router.add_route("PUT", "/core/rules{tail:.*}", self.smile_timeout)
@@ -194,12 +188,6 @@ class TestPlugwise:  # pylint: disable=attribute-defined-outside-init
         raise aiohttp.web.HTTPAccepted(text=text)
 
     @classmethod
-    async def smile_set_relay_stretch(cls, request):
-        """Render generic API calling endpoint."""
-        text = "<xml />"
-        raise aiohttp.web.HTTPOk(text=text)
-
-    @classmethod
     async def smile_del_notification(cls, request):
         """Render generic API calling endpoint."""
         text = "<xml />"
@@ -238,14 +226,13 @@ class TestPlugwise:  # pylint: disable=attribute-defined-outside-init
         timeout=False,
         raise_timeout=False,
         fail_auth=False,
-        stretch=False,
     ):
         """Connect to a smile environment and perform basic asserts."""
         port = aiohttp.test_utils.unused_port()
         test_password = "".join(random.choice(string.ascii_lowercase) for i in range(8))
 
         # Happy flow
-        app = await self.setup_app(broken, timeout, raise_timeout, fail_auth, stretch)
+        app = await self.setup_app(broken, timeout, raise_timeout, fail_auth)
 
         server = aiohttp.test_utils.TestServer(
             app, port=port, scheme="http", host="127.0.0.1"
@@ -308,7 +295,7 @@ class TestPlugwise:  # pylint: disable=attribute-defined-outside-init
 
     # Wrap connect for invalid connections
     async def connect_wrapper(
-        self, raise_timeout=False, fail_auth=False, stretch=False
+        self, raise_timeout=False, fail_auth=False
     ):
         """Wrap connect to try negative testing before positive testing."""
         if fail_auth:
@@ -340,9 +327,6 @@ class TestPlugwise:  # pylint: disable=attribute-defined-outside-init
             raise self.ConnectError  # pragma: no cover
         except pw_exceptions.InvalidXMLError:
             _LOGGER.info(" + successfully passed XML issue handling.")
-
-        _LOGGER.info("Connecting to functioning device:")
-        return await self.connect(stretch=stretch)
 
     # Generic disconnect
     @classmethod
