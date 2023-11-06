@@ -294,9 +294,7 @@ class TestPlugwise:  # pylint: disable=attribute-defined-outside-init
             raise exception
 
     # Wrap connect for invalid connections
-    async def connect_wrapper(
-        self, raise_timeout=False, fail_auth=False
-    ):
+    async def connect_wrapper(self, raise_timeout=False, fail_auth=False):
         """Wrap connect to try negative testing before positive testing."""
         if fail_auth:
             try:
