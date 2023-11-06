@@ -504,7 +504,7 @@ class SmileHelper:
                 appl.location = appl_loc.attrib["id"]
             # Don't assign the _home_location to thermostat-devices
             # without a location, they are not active
-            elif or appl.pwclass not in THERMOSTAT_CLASSES:
+            elif appl.pwclass not in THERMOSTAT_CLASSES:
                 appl.location = self._home_location
 
             appl.dev_id = appliance.attrib["id"]
