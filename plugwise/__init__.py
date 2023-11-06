@@ -99,9 +99,7 @@ class SmileData(SmileHelper):
                 and "plugwise_notification" in device["binary_sensors"]
             ) or (
                 device_id == self.gateway_id
-                and (
-                    self._is_thermostat or self.smile_type == "power"
-                )
+                and (self._is_thermostat or self.smile_type == "power")
             ):
                 data["binary_sensors"]["plugwise_notification"] = bool(
                     self._notifications
