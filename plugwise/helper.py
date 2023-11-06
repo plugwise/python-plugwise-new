@@ -410,12 +410,9 @@ class SmileHelper:
 
             # Info for OpenTherm device
             appl.name = "OpenTherm"
-            locator1 = "./logs/point_log[type='flame_state']/boiler_state"
-            locator2 = "./services/boiler_state"
+            locator = "./logs/point_log[type='flame_state']/boiler_state"
             mod_type = "boiler_state"
-            module_data = self._get_module_data(appliance, locator1, mod_type)
-            if not module_data["contents"]:
-                module_data = self._get_module_data(appliance, locator2, mod_type)
+            module_data = self._get_module_data(appliance, locator, mod_type)
             appl.vendor_name = module_data["vendor_name"]
             appl.hardware = module_data["hardware_version"]
             appl.model = check_model(module_data["vendor_model"], appl.vendor_name)
