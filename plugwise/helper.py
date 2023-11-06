@@ -329,7 +329,7 @@ class SmileHelper:
     def _energy_device_info_finder(self, appliance: etree, appl: Munch) -> Munch:
         """Helper-function for _appliance_info_finder().
 
-        Collect energy device info (Circle, Plug, Stealth): firmware, model and vendor name.
+        Collect energy device info (P1, Plug): firmware, model and vendor name.
         """
         if self.smile_type == "power":
             locator = "./logs/point_log/electricity_point_meter"
@@ -450,6 +450,9 @@ class SmileHelper:
                     self._dhw_allowed_modes = dhw_mode_list
 
             return appl
+
+        # Collect info from power-related devices
+        appl = self._energy_device_info_finder(appliance, appl)
 
         return appl
 
