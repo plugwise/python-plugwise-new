@@ -109,11 +109,6 @@ P1_MEASUREMENTS: Final[dict[str, UOM]] = {
     "voltage_phase_two": UOM(ELECTRIC_POTENTIAL_VOLT),
     "voltage_phase_three": UOM(ELECTRIC_POTENTIAL_VOLT),
 }
-P1_LEGACY_MEASUREMENTS: Final[dict[str, UOM]] = {
-    "electricity_consumed": UOM(POWER_WATT),
-    "electricity_produced": UOM(POWER_WATT),
-    "gas_consumed": UOM(VOLUME_CUBIC_METERS),
-}
 # Thermostat and Plug/Stretch related measurements
 # Excluded:
 # zone_thermosstat: 'temperature_offset'
@@ -169,10 +164,6 @@ HEATER_CENTRAL_MEASUREMENTS: Final[dict[str, DATA | UOM]] = {
     "slave_boiler_state": UOM(NONE),
     "flame_state": UOM(NONE),  # Also present when there is a single gas-heater
     "central_heater_water_pressure": DATA("water_pressure", PRESSURE_BAR),
-    # Legacy Anna: similar to flame-state on Anna/Adam
-    "boiler_state": DATA("flame_state", NONE),
-    # Legacy Anna: shows when heating is active, we don't show dhw_state, cannot be determined reliably
-    "intended_boiler_state": DATA("heating_state", NONE),
     # Outdoor temperature from APPLIANCES - present for a heatpump
     "outdoor_temperature": DATA("outdoor_air_temperature", TEMP_CELSIUS),
 }
@@ -185,24 +176,10 @@ OBSOLETE_MEASUREMENTS: Final[tuple[str, ...]] = (
 # Known types of Smiles and Stretches
 SMILE = namedtuple("SMILE", "smile_type smile_name")
 SMILES: Final[dict[str, SMILE]] = {
-    "smile_v2": SMILE("power", "Smile P1"),
-    "smile_v3": SMILE("power", "Smile P1"),
     "smile_v4": SMILE("power", "Smile P1"),
-    "smile_open_therm_v2": SMILE("thermostat", ADAM),
     "smile_open_therm_v3": SMILE("thermostat", ADAM),
-    "smile_thermo_v1": SMILE("thermostat", ANNA),
-    "smile_thermo_v3": SMILE("thermostat", ANNA),
     "smile_thermo_v4": SMILE("thermostat", ANNA),
-    "stretch_v2": SMILE("stretch", "Stretch"),
-    "stretch_v3": SMILE("stretch", "Stretch"),
 }
-REQUIRE_APPLIANCES: Final[list[str]] = [
-    "smile_thermo_v1",
-    "smile_thermo_v3",
-    "smile_thermo_v4",
-    "stretch_v2",
-    "stretch_v3",
-]
 
 # Class, Literal and related tuple-definitions
 

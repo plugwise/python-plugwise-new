@@ -42,7 +42,6 @@ from .constants import (
     LOGGER,
     NONE,
     OBSOLETE_MEASUREMENTS,
-    P1_LEGACY_MEASUREMENTS,
     P1_MEASUREMENTS,
     POWER_WATT,
     SENSORS,
@@ -238,7 +237,6 @@ class SmileHelper:
         self._outdoor_temp: float
         self._reg_allowed_modes: list[str] = []
         self._schedule_old_states: dict[str, dict[str, str]] = {}
-        self._smile_legacy = False
         self._status: etree
         self._stretch_v2 = False
         self._stretch_v3 = False
@@ -528,7 +526,7 @@ class SmileHelper:
             if appl.pwclass == "gateway" and self.smile_type == "power":
                 appl.dev_id = appl.location
 
-            # Don't show orphaned non-legacy thermostat-types or the OpenTherm Gateway.
+            # Don't show orphaned thermostat-types or the OpenTherm Gateway.
             if appl.pwclass in THERMOSTAT_CLASSES and appl.location is None:
                 continue
 
@@ -675,9 +673,6 @@ class SmileHelper:
         for measurement, attrs in measurements.items():
             p_locator = f'.//logs/point_log[type="{measurement}"]/period/measurement'
             if (appl_p_loc := appliance.find(p_locator)) is not None:
-                if self._smile_legacy and measurement == "domestic_hot_water_state":
-                    continue
-
                 # Skip known obsolete measurements
                 updated_date_locator = (
                     f'.//logs/point_log[type="{measurement}"]/updated_date'
@@ -793,9 +788,6 @@ class SmileHelper:
             functionality = "thermostat_functionality"
             if item == "temperature_offset":
                 functionality = "offset_functionality"
-                # Don't support temperature_offset for legacy Anna
-                if self._smile_legacy:
-                    continue
 
             # When there is no updated_date-text, skip the actuator
             updated_date_location = f'.//actuator_functionalities/{functionality}[type="{item}"]/updated_date'
@@ -1197,7 +1189,7 @@ class SmileHelper:
         """Helper-function for smile.py: _device_data_climate().
 
         Obtain the available schedules/schedules. Adam: a schedule can be connected to more than one location.
-        NEW: when a location_id is present then the schedule is active. Valid for both Adam and non-legacy Anna.
+        NEW: when a location_id is present then the schedule is active. Valid for both Adam and Anna.
         """
         available: list[str] = [NONE]
         rule_ids: dict[str, str] = {}

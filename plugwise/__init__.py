@@ -28,7 +28,6 @@ from .constants import (
     MIN_SETPOINT,
     MODULES,
     NOTIFICATIONS,
-    REQUIRE_APPLIANCES,
     RULES,
     SMILES,
     STATUS,
@@ -103,8 +102,7 @@ class SmileData(SmileHelper):
             ) or (
                 device_id == self.gateway_id
                 and (
-                    self._is_thermostat
-                    or (self.smile_type == "power" and not self._smile_legacy)
+                    self._is_thermostat or self.smile_type == "power"
                 )
             ):
                 data["binary_sensors"]["plugwise_notification"] = bool(
@@ -510,7 +508,7 @@ class Smile(SmileComm, SmileData):
                 case "smile_open_therm_v3":
                     self._appliances = await self._request(APPLIANCES)
                     self._modules = await self._request(MODULES)
-                case self._target_smile if self._target_smile in REQUIRE_APPLIANCES:
+                case "smile_thermo_v4":
                     self._appliances = await self._request(APPLIANCES)
 
             self._update_gw_devices()
