@@ -76,16 +76,23 @@ class TestPlugwise:  # pylint: disable=attribute-defined-outside-init
             app.router.add_route("PUT", "/{tail:.*}", self.smile_fail_auth)
             return app
 
-        app.router.add_get("/core/appliances", self.smile_appliances)
-        app.router.add_get("/core/domain_objects", self.smile_domain_objects)
-        app.router.add_get("/core/modules", self.smile_modules)
+        # TODO: CLEANUP; as the whole test was based on /core/locations this needs rewrite to domain_objects
+        # CLEANUP Not used anymore
+        # CLEANUP app.router.add_get("/core/appliances", self.smile_appliances)
+        # CLEANUP Used but needs the timeout-handling instead of /core/locations
+        # CLEANUP app.router.add_get("/core/domain_objects", self.smile_domain_objects)
+        # CLEANUP Not used anymore
+        # CLEANUP app.router.add_get("/core/modules", self.smile_modules)
+        # CLEANUP re-introducing this as a working construct doesn't work
+        # CLEANUP app.router.add_get("/core/locations", self.smile_locations)
 
+        # CLEANUP Adjusted to domain_objects
         if broken:
-            app.router.add_get("/core/locations", self.smile_broken)
+            app.router.add_get("/core/domain_objects", self.smile_broken)
         elif timeout:
-            app.router.add_get("/core/locations", self.smile_timeout)
+            app.router.add_get("/core/domain_objects", self.smile_timeout)
         else:
-            app.router.add_get("/core/locations", self.smile_locations)
+            app.router.add_get("/core/domain_objects", self.smile_domain_objects)
 
         # Introducte timeout with 2 seconds, test by setting response to 10ms
         # Don't actually wait 2 seconds as this will prolongue testing
@@ -227,7 +234,8 @@ class TestPlugwise:  # pylint: disable=attribute-defined-outside-init
         client = aiohttp.test_utils.TestClient(server)
         websession = client.session
 
-        url = f"{server.scheme}://{server.host}:{server.port}/core/locations"
+        # CLEANUP: Adjusted from locations to domain_objects
+        url = f"{server.scheme}://{server.host}:{server.port}/core/domain_objects"
 
         # Try/exceptpass to accommodate for Timeout of aoihttp
         try:
