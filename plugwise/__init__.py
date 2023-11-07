@@ -476,41 +476,17 @@ class Smile(SmileComm, SmileData):
     async def _full_update_device(self) -> None:
         """Perform a first fetch of all XML data, needed for initialization."""
         await self._update_domain_objects()
-        self._locations = await self._request(LOCATIONS)
-        self._modules = await self._request(MODULES)
-        self._appliances = await self._request(APPLIANCES)
+        self._locations = self._domain_objects.findall("./locations")
+        self._modules = self._domain_objects.findall("./modules")
+        self._appliances = self._domain_objects.findall("./appliances")
 
     async def async_update(self) -> PlugwiseData:
         """Perform an incremental update for updating the various device states."""
-        # Perform a full update at day-change
-        day_number = dt.datetime.now().strftime("%w")
-        if (
-            day_number  # pylint: disable=consider-using-assignment-expr
-            != self._previous_day_number
-        ):
-            LOGGER.debug(
-                "Performing daily full-update, reload the Plugwise integration when a single entity becomes unavailable."
-            )
-            self.gw_data: GatewayData = {}
-            self.gw_devices: dict[str, DeviceData] = {}
-            await self._full_update_device()
-            self.get_all_devices()
-        # Otherwise perform an incremental update
-        else:
-            await self._update_domain_objects()
-            match self._target_smile:
-                case "smile_v4":
-                    self._locations = await self._request(LOCATIONS)
-                case "smile_open_therm_v3":
-                    self._appliances = await self._request(APPLIANCES)
-                    self._modules = await self._request(MODULES)
-                case "smile_thermo_v4":
-                    self._appliances = await self._request(APPLIANCES)
+        self.gw_data: GatewayData = {}
+        self.gw_devices: dict[str, DeviceData] = {}
+        await self._full_update_device()
+        self.get_all_devices()
 
-            self._update_gw_devices()
-            self.gw_data["notifications"] = self._notifications
-
-        self._previous_day_number = day_number
         return PlugwiseData(self.gw_data, self.gw_devices)
 
     def determine_contexts(

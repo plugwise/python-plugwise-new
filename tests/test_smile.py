@@ -79,8 +79,6 @@ class TestPlugwise:  # pylint: disable=attribute-defined-outside-init
         app.router.add_get("/core/appliances", self.smile_appliances)
         app.router.add_get("/core/domain_objects", self.smile_domain_objects)
         app.router.add_get("/core/modules", self.smile_modules)
-        app.router.add_get("/system/status.xml", self.smile_status)
-        app.router.add_get("/system", self.smile_status)
 
         if broken:
             app.router.add_get("/core/locations", self.smile_broken)
@@ -155,19 +153,6 @@ class TestPlugwise:  # pylint: disable=attribute-defined-outside-init
         with open(userdata, encoding="utf-8") as filedata:
             data = filedata.read()
         return aiohttp.web.Response(text=data)
-
-    async def smile_status(self, request):
-        """Render setup specific status endpoint."""
-        try:
-            userdata = os.path.join(
-                os.path.dirname(__file__),
-                f"../userdata/{self.smile_setup}/system_status_xml.xml",
-            )
-            with open(userdata, encoding="utf-8") as filedata:
-                data = filedata.read()
-            return aiohttp.web.Response(text=data)
-        except OSError:
-            raise aiohttp.web.HTTPNotFound
 
     @classmethod
     async def smile_set_temp_or_preset(cls, request):
@@ -370,8 +355,6 @@ class TestPlugwise:  # pylint: disable=attribute-defined-outside-init
         with freeze_time(test_time):
             if initialize:
                 _LOGGER.info("Asserting testdata:")
-                await smile._full_update_device()
-                smile.get_all_devices()
                 data = await smile.async_update()
             else:
                 _LOGGER.info("Asserting updated testdata:")
