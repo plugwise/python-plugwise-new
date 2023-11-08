@@ -132,7 +132,7 @@
 			<zig_bee_node id='877114bc3e864b0fa40f22a1f4c6f55f'>
 				<mac_address>ABCD012345670A01</mac_address>
 				<type>end_device</type>
-				<reachable>true</reachable>
+				<reachable>false</reachable>
 				<power_source>battery</power_source>
 				<intended_override_antenna_power>false</intended_override_antenna_power>
 				<override_antenna_power>false</override_antenna_power>
@@ -177,7 +177,7 @@
 				<interval/>
 				<electricity_point_meter id='10284652151d45e1b6ee81ca620dec5b'/>
 				<period start_date="2022-01-11T08:05:40.164+01:00" end_date="2022-01-11T08:05:40.164+01:00">
-					<measurement log_date="2022-01-11T08:05:40.164+01:00">98.19</measurement>
+					<measurement log_date="2022-01-11T08:05:40.164+01:00">0.00</measurement>
 				</period>
 			</point_log>
 			<point_log id='66e87f88c0dc4b1d99cb678030c445b5'>
@@ -199,7 +199,7 @@
 				<interval>PT15M</interval>
 				<electricity_interval_meter id='65677100dd34484c91a38fa9f151eed6'/>
 				<period start_date="2022-01-11T08:00:00+01:00" end_date="2022-01-11T08:00:00+01:00" interval="PT15M">
-					<measurement log_date="2022-01-11T08:00:00+01:00">24.00</measurement>
+					<measurement log_date="2022-01-11T08:00:00+01:00">0.00</measurement>
 				</period>
 			</interval_log>
 			<point_log id='b3f0c9aff0a84a5991ff0bfd11280b8c'>
@@ -210,7 +210,7 @@
 				<interval/>
 				<relay id='35e7673305014654a4575f591ca6a01a'/>
 				<period start_date="2022-01-11T08:02:24.183+01:00" end_date="2022-01-11T08:02:24.183+01:00">
-					<measurement log_date="2022-01-11T08:02:24.183+01:00">on</measurement>
+					<measurement log_date="2022-01-11T08:02:24.183+01:00">off</measurement>
 				</period>
 			</point_log>
 			<interval_log id='eed6f2db80fe4c12aaca560a84dd2ae0'>
@@ -228,8 +228,8 @@
 		<actuator_functionalities>
 			<relay_functionality id='45cfd0a5759e45699ec6e653cb867981'>
 				<updated_date>2022-01-11T08:02:24.183+01:00</updated_date>
-				<lock>true</lock>
-				<state>on</state>
+				<lock>false</lock>
+				<state>off</state>
 				<relay id='35e7673305014654a4575f591ca6a01a'/>
 			</relay_functionality>
 		</actuator_functionalities>
@@ -424,7 +424,7 @@
 				<interval/>
 				<boiler_state id='47a58cc71c474bad91e2eaaa5de3a761'/>
 				<period start_date="2022-01-11T07:49:39.411+01:00" end_date="2022-01-11T07:49:39.411+01:00">
-					<measurement log_date="2022-01-11T07:49:39.411+01:00">off</measurement>
+					<measurement log_date="2022-01-11T07:49:39.411+01:00">on</measurement>
 				</period>
 			</point_log>
 			<point_log id='9aea5f3be43341acbde85ec0fd8ddb8c'>
@@ -625,7 +625,7 @@
 				<interval/>
 				<relay id='fda539a7d5834f6a8f2dc5f5b2f5ea56'/>
 				<period start_date="2022-01-11T08:03:16.606+01:00" end_date="2022-01-11T08:03:16.606+01:00">
-					<measurement log_date="2022-01-11T08:03:16.606+01:00">on</measurement>
+					<measurement log_date="2022-01-11T08:03:16.606+01:00">off</measurement>
 				</period>
 			</point_log>
 			<interval_log id='d7384d844896403fb85e5d6b530ce58a'>
@@ -655,7 +655,7 @@
 			<relay_functionality id='4d03be44b57447bd97797ef47c8e56e8'>
 				<updated_date>2022-01-11T08:03:16.606+01:00</updated_date>
 				<lock>false</lock>
-				<state>on</state>
+				<state>off</state>
 				<relay id='fda539a7d5834f6a8f2dc5f5b2f5ea56'/>
 			</relay_functionality>
 		</actuator_functionalities>
