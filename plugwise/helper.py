@@ -203,7 +203,6 @@ class SmileHelper:
 
     def __init__(self) -> None:
         """Set the constructor for this class."""
-        self._appliances: etree
         self._cooling_activation_outdoor_temp: float
         self._cooling_deactivation_threshold: float
         self._cooling_present = False
@@ -216,9 +215,7 @@ class SmileHelper:
         self._is_thermostat = False
         self._last_active: dict[str, str | None] = {}
         self._last_modified: dict[str, str] = {}
-        self._locations: etree
         self._loc_data: dict[str, ThermoLoc] = {}
-        self._modules: etree
         self._notifications: dict[str, dict[str, str]] = {}
         self._on_off_device = False
         self._opentherm_device = False
@@ -266,7 +263,7 @@ class SmileHelper:
         """Collect all locations."""
         loc = Munch()
 
-        locations = self._locations.findall("./location")
+        locations = self._domain_objects.findall("./location")
         for location in locations:
             loc.name = location.find("name").text
             loc.loc_id = location.attrib["id"]
@@ -296,7 +293,7 @@ class SmileHelper:
             link_id = appl_search.attrib["id"]
             loc = f".//{mod_type}[@id='{link_id}']...."
             # Not possible to walrus for some reason...
-            module = self._modules.find(loc)
+            module = self._domain_objects.find(loc)
             if module is not None:  # pylint: disable=consider-using-assignment-expr
                 model_data["contents"] = True
                 if (vendor_name := module.find("vendor_name").text) is not None:
@@ -364,7 +361,7 @@ class SmileHelper:
 
             # Adam: look for the ZigBee MAC address of the Smile
             if self.smile(ADAM) and (
-                found := self._modules.find(".//protocols/zig_bee_coordinator")
+                found := self._domain_objects.find(".//protocols/zig_bee_coordinator")
             ):
                 appl.zigbee_mac = found.find("mac_address").text
 
@@ -449,7 +446,7 @@ class SmileHelper:
         appl.name = "P1"
         appl.pwclass = "smartmeter"
         appl.zigbee_mac = None
-        location = self._locations.find(f'./location[@id="{loc_id}"]')
+        location = self._domain_objects.find(f'./location[@id="{loc_id}"]')
         appl = self._energy_device_info_finder(location, appl)
 
         self.gw_devices[appl.dev_id] = {"dev_class": appl.pwclass}
@@ -475,7 +472,7 @@ class SmileHelper:
         self._count = 0
         self._all_locations()
 
-        for appliance in self._appliances.findall("./appliance"):
+        for appliance in self._domain_objects.findall("./appliance"):
             appl = Munch()
             appl.pwclass = appliance.find("type").text
             # Skip thermostats that have this key, should be an orphaned device (Core #81712)
@@ -750,7 +747,7 @@ class SmileHelper:
     def _get_appliances_with_offset_functionality(self) -> list[str]:
         """Helper-function collecting all appliance that have offset_functionality."""
         therm_list: list[str] = []
-        offset_appls = self._appliances.findall(
+        offset_appls = self._domain_objects.findall(
             './/actuator_functionalities/offset_functionality[type="temperature_offset"]/offset/../../..'
         )
         for item in offset_appls:
@@ -890,7 +887,7 @@ class SmileHelper:
             measurements = HEATER_CENTRAL_MEASUREMENTS
 
         if (
-            appliance := self._appliances.find(f'./appliance[@id="{dev_id}"]')
+            appliance := self._domain_objects.find(f'./appliance[@id="{dev_id}"]')
         ) is not None:
             self._appliance_measurements(appliance, data, measurements)
             self._get_lock_state(appliance, data)
@@ -1004,7 +1001,7 @@ class SmileHelper:
         Determine the location-set_temperature uri - from LOCATIONS.
         """
         locator = f'./location[@id="{loc_id}"]/actuator_functionalities/thermostat_functionality'
-        thermostat_functionality_id = self._locations.find(locator).attrib["id"]
+        thermostat_functionality_id = self._domain_objects.find(locator).attrib["id"]
 
         return f"{LOCATIONS};id={loc_id}/thermostat;id={thermostat_functionality_id}"
 
@@ -1052,7 +1049,7 @@ class SmileHelper:
         """
         loc_found: int = 0
         open_valve_count: int = 0
-        for appliance in self._appliances.findall("./appliance"):
+        for appliance in self._domain_objects.findall("./appliance"):
             locator = './logs/point_log[type="valve_position"]/period/measurement'
             if (appl_loc := appliance.find(locator)) is not None:
                 loc_found += 1
@@ -1137,7 +1134,7 @@ class SmileHelper:
         peak_list: list[str] = ["nl_peak", "nl_offpeak"]
         t_string = "tariff"
 
-        search = self._locations
+        search = self._domain_objects
         loc.logs = search.find(f'./location[@id="{loc_id}"]/logs')
         for loc.measurement, loc.attrs in P1_MEASUREMENTS.items():
             for loc.log_type in log_list:

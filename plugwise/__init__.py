@@ -476,9 +476,6 @@ class Smile(SmileComm, SmileData):
     async def _full_update_device(self) -> None:
         """Perform a first fetch of all XML data, needed for initialization."""
         await self._update_domain_objects()
-        self._locations = self._domain_objects.findall("./locations")
-        self._modules = self._domain_objects.findall("./modules")
-        self._appliances = self._domain_objects.findall("./appliances")
 
     async def async_update(self) -> PlugwiseData:
         """Perform an incremental update for updating the various device states."""
@@ -564,7 +561,7 @@ class Smile(SmileComm, SmileData):
         if preset not in list(presets):
             raise PlugwiseError("Plugwise: invalid preset.")
 
-        current_location = self._locations.find(f'location[@id="{loc_id}"]')
+        current_location = self._domain_objects.find(f'location[@id="{loc_id}"]')
         location_name = current_location.find("name").text
         location_type = current_location.find("type").text
 
@@ -623,7 +620,7 @@ class Smile(SmileComm, SmileData):
         temp = str(temperature)
         thermostat_id: str | None = None
         locator = f'appliance[@id="{self._heater_id}"]/actuator_functionalities/thermostat_functionality'
-        if th_func_list := self._appliances.findall(locator):
+        if th_func_list := self._domain_objects.findall(locator):
             for th_func in th_func_list:
                 if th_func.find("type").text == key:
                     thermostat_id = th_func.attrib["id"]
