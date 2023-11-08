@@ -1099,7 +1099,7 @@ class TestPlugwise:  # pylint: disable=attribute-defined-outside-init
                 "vendor": "Plugwise",
                 "available": True,
                 "sensors": {
-                    "electricity_consumed": 98.0,
+                    "electricity_consumed": 98.2,
                     "electricity_consumed_interval": 24.0,
                     "electricity_produced": 0.0,
                     "electricity_produced_interval": 0.0,
@@ -1117,7 +1117,7 @@ class TestPlugwise:  # pylint: disable=attribute-defined-outside-init
                 "available": True,
                 "sensors": {
                     "electricity_consumed": 46.8,
-                    "electricity_consumed_interval": 0.0,
+                    "electricity_consumed_interval": 11.0,
                     "electricity_produced": 0.0,
                     "electricity_produced_interval": 0.0,
                 },
@@ -1198,7 +1198,7 @@ class TestPlugwise:  # pylint: disable=attribute-defined-outside-init
                     "flame_state": False,
                 },
                 "sensors": {
-                    "water_temperature": 37.0,
+                    "water_temperature": 29.0,
                     "intended_boiler_temperature": 38.1,
                 },
                 "switches": {"dhw_cm_switch": False},
