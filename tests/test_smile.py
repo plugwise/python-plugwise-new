@@ -2070,7 +2070,7 @@ class TestPlugwise:  # pylint: disable=attribute-defined-outside-init
                 "vendor": "Plugwise",
                 "available": True,
                 "sensors": {
-                    "temperature": 24.3,
+                    "temperature": 24.2,
                     "setpoint": 13.0,
                     "temperature_difference": 1.7,
                     "valve_position": 0.0,
