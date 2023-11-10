@@ -600,7 +600,7 @@
 				<unit>lx</unit>
 				<last_consecutive_log_date>2020-04-16T17:23:58.054+02:00</last_consecutive_log_date>
 				<period start_date="2020-04-16T17:23:58.054+02:00" end_date="2020-04-16T17:23:58.054+02:00">
-					<measurement log_date="2020-04-16T17:23:58.054+02:00">24.50</measurement>
+					<measurement log_date="2020-04-16T17:23:58.054+02:00">25.50</measurement>
 				</period>
 				<illuminance_meter id='ed94a6e66f0d44d2b73713e8807bd2ed'/>
 			</point_log>
