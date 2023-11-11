@@ -600,7 +600,7 @@
 				<unit>lx</unit>
 				<last_consecutive_log_date>2020-04-16T17:23:58.054+02:00</last_consecutive_log_date>
 				<period start_date="2020-04-16T17:23:58.054+02:00" end_date="2020-04-16T17:23:58.054+02:00">
-					<measurement log_date="2020-04-16T17:23:58.054+02:00">24.50</measurement>
+					<measurement log_date="2020-04-16T17:23:58.054+02:00">25.50</measurement>
 				</period>
 				<illuminance_meter id='ed94a6e66f0d44d2b73713e8807bd2ed'/>
 			</point_log>
@@ -1546,6 +1546,17 @@
 					<measurement log_date="2020-04-16T17:24:13.076+02:00">0</measurement>
 				</period>
 				<fault_code id='c2f0f2af06284c9999e1446431bb0438'/>
+			</point_log>
+			<point_log id='9257714483e4423a8a3423072eda3d40'>
+				<type>cooling_enabled</type>
+				<unit></unit>
+				<updated_date>2022-11-02T03:57:23.207+01:00</updated_date>
+				<last_consecutive_log_date>2022-11-02T03:57:23.207+01:00</last_consecutive_log_date>
+				<interval/>
+				<cooling_toggle id='b556a934246f4d99979288841e7ee58a'/>
+				<period start_date="2022-11-02T03:57:23.207+01:00" end_date="2022-11-02T03:57:23.207+01:00">
+					<measurement log_date="2022-11-02T03:57:23.207+01:00">on</measurement>
+				</period>
 			</point_log>
 		</logs>
 		<actuator_functionalities>

@@ -322,7 +322,7 @@
 				<unit>C</unit>
 				<last_consecutive_log_date>2020-04-09T13:51:55.147+02:00</last_consecutive_log_date>
 				<period start_date="2020-04-09T14:06:36.049+02:00" end_date="2020-04-09T14:06:36.049+02:00">
-					<measurement log_date="2020-04-09T14:06:36.049+02:00">18.00</measurement>
+					<measurement log_date="2020-04-09T14:06:36.049+02:00">3.00</measurement>
 				</period>
 				<thermo_meter id='71b1d108384a49769ee4f47b1317cbc6'/>
 			</point_log>
@@ -382,7 +382,7 @@
 				<unit>C</unit>
 				<last_consecutive_log_date>2020-04-03T07:54:47.729+02:00</last_consecutive_log_date>
 				<period start_date="2020-04-08T19:24:39.363+02:00" end_date="2020-04-08T19:24:39.363+02:00">
-					<measurement log_date="2020-04-08T19:24:39.363+02:00">0.00</measurement>
+					<measurement log_date="2020-04-08T19:24:39.363+02:00">35.00</measurement>
 				</period>
 				<thermo_meter id='6a3b56382ef04a2db54c35c349a6521f'/>
 			</point_log>
@@ -764,6 +764,17 @@
 					<measurement log_date="2020-04-09T14:10:01.382+02:00">0</measurement>
 				</period>
 				<fault_code id='c2f0f2af06284c9999e1446431bb0438'/>
+			</point_log>
+			<point_log id='9257714483e4423a8a3423072eda3d40'>
+				<type>cooling_enabled</type>
+				<unit></unit>
+				<updated_date>2022-11-02T03:57:23.207+01:00</updated_date>
+				<last_consecutive_log_date>2022-11-02T03:57:23.207+01:00</last_consecutive_log_date>
+				<interval/>
+				<cooling_toggle id='b556a934246f4d99979288841e7ee58a'/>
+				<period start_date="2022-11-02T03:57:23.207+01:00" end_date="2022-11-02T03:57:23.207+01:00">
+					<measurement log_date="2022-11-02T03:57:23.207+01:00">off</measurement>
+				</period>
 			</point_log>
 		</logs>
 		<actuator_functionalities>

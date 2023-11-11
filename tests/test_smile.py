@@ -121,41 +121,11 @@ class TestPlugwise:  # pylint: disable=attribute-defined-outside-init
         return app
 
     # Wrapper for appliances uri
-    async def smile_appliances(self, request):
-        """Render setup specific appliances endpoint."""
-        userdata = os.path.join(
-            os.path.dirname(__file__),
-            f"../userdata/{self.smile_setup}/core.appliances.xml",
-        )
-        with open(userdata, encoding="utf-8") as filedata:
-            data = filedata.read()
-        return aiohttp.web.Response(text=data)
-
     async def smile_domain_objects(self, request):
         """Render setup specific domain objects endpoint."""
         userdata = os.path.join(
             os.path.dirname(__file__),
             f"../userdata/{self.smile_setup}/core.domain_objects.xml",
-        )
-        with open(userdata, encoding="utf-8") as filedata:
-            data = filedata.read()
-        return aiohttp.web.Response(text=data)
-
-    async def smile_locations(self, request):
-        """Render setup specific locations endpoint."""
-        userdata = os.path.join(
-            os.path.dirname(__file__),
-            f"../userdata/{self.smile_setup}/core.locations.xml",
-        )
-        with open(userdata, encoding="utf-8") as filedata:
-            data = filedata.read()
-        return aiohttp.web.Response(text=data)
-
-    async def smile_modules(self, request):
-        """Render setup specific modules endpoint."""
-        userdata = os.path.join(
-            os.path.dirname(__file__),
-            f"../userdata/{self.smile_setup}/core.modules.xml",
         )
         with open(userdata, encoding="utf-8") as filedata:
             data = filedata.read()
@@ -672,11 +642,11 @@ class TestPlugwise:  # pylint: disable=attribute-defined-outside-init
                     "flame_state": True,
                 },
                 "sensors": {
-                    "water_temperature": 52.0,
-                    "intended_boiler_temperature": 48.6,
+                    "water_temperature": 45.0,
+                    "intended_boiler_temperature": 39.9,
                     "modulation_level": 0.0,
-                    "return_temperature": 42.0,
-                    "water_pressure": 2.1,
+                    "return_temperature": 32.0,
+                    "water_pressure": 2.2,
                 },
                 "switches": {"dhw_cm_switch": False},
             },
@@ -699,7 +669,7 @@ class TestPlugwise:  # pylint: disable=attribute-defined-outside-init
                 "available_schedules": ["Standaard", "Thuiswerken"],
                 "select_schedule": "None",
                 "mode": "heat",
-                "sensors": {"temperature": 20.5, "setpoint": 20.5, "illuminance": 40.5},
+                "sensors": {"temperature": 20.4, "setpoint": 20.5, "illuminance": 60.0},
             },
             "0466eae8520144c78afb29628384edeb": {
                 "dev_class": "gateway",
@@ -849,11 +819,11 @@ class TestPlugwise:  # pylint: disable=attribute-defined-outside-init
                     "flame_state": True,
                 },
                 "sensors": {
-                    "water_temperature": 52.0,
-                    "intended_boiler_temperature": 48.6,
+                    "water_temperature": 45.0,
+                    "intended_boiler_temperature": 39.9,
                     "modulation_level": 0.0,
-                    "return_temperature": 42.0,
-                    "water_pressure": 2.1,
+                    "return_temperature": 32.0,
+                    "water_pressure": 2.2,
                 },
                 "switches": {"dhw_cm_switch": False},
             },
@@ -876,7 +846,7 @@ class TestPlugwise:  # pylint: disable=attribute-defined-outside-init
                 "available_schedules": ["Standaard", "Thuiswerken"],
                 "select_schedule": "None",
                 "mode": "heat",
-                "sensors": {"temperature": 20.5, "setpoint": 20.5, "illuminance": 40.5},
+                "sensors": {"temperature": 20.6, "setpoint": 20.5, "illuminance": 60.0},
             },
             "0466eae8520144c78afb29628384edeb": {
                 "dev_class": "gateway",
@@ -1099,7 +1069,7 @@ class TestPlugwise:  # pylint: disable=attribute-defined-outside-init
                 "vendor": "Plugwise",
                 "available": True,
                 "sensors": {
-                    "electricity_consumed": 98.0,
+                    "electricity_consumed": 98.2,
                     "electricity_consumed_interval": 24.0,
                     "electricity_produced": 0.0,
                     "electricity_produced_interval": 0.0,
@@ -1117,7 +1087,7 @@ class TestPlugwise:  # pylint: disable=attribute-defined-outside-init
                 "available": True,
                 "sensors": {
                     "electricity_consumed": 46.8,
-                    "electricity_consumed_interval": 0.0,
+                    "electricity_consumed_interval": 11.0,
                     "electricity_produced": 0.0,
                     "electricity_produced_interval": 0.0,
                 },
@@ -1198,7 +1168,7 @@ class TestPlugwise:  # pylint: disable=attribute-defined-outside-init
                     "flame_state": False,
                 },
                 "sensors": {
-                    "water_temperature": 37.0,
+                    "water_temperature": 29.0,
                     "intended_boiler_temperature": 38.1,
                 },
                 "switches": {"dhw_cm_switch": False},
@@ -1266,12 +1236,12 @@ class TestPlugwise:  # pylint: disable=attribute-defined-outside-init
             "da224107914542988a88561b4452b0f6",
             "056ee145a816487eaa69243c3280f8bf",
             "67d73d0bd469422db25a618a5fb8eeb0",
-            "ad4838d7d35c4d6ea796ee12ae5aedf8",
-            "29542b2b6a6a4169acecc15c72a599b8",
             "2568cc4b9c1e401495d4741a5f89bee1",
+            "29542b2b6a6a4169acecc15c72a599b8",
             "854f8a9b0e7e425db97f1f110e1ce4b3",
             "1772a4ea304041adb83f357b751341ff",
             "e2f4322d57924fa090fbbc48b3a140dc",
+            "ad4838d7d35c4d6ea796ee12ae5aedf8",
             "e8ef2a01ed3b4139a53bf749204fe6b4",
         ]
 
@@ -2070,7 +2040,7 @@ class TestPlugwise:  # pylint: disable=attribute-defined-outside-init
                 "vendor": "Plugwise",
                 "available": True,
                 "sensors": {
-                    "temperature": 24.3,
+                    "temperature": 24.2,
                     "setpoint": 13.0,
                     "temperature_difference": 1.7,
                     "valve_position": 0.0,
@@ -2267,7 +2237,6 @@ class TestPlugwise:  # pylint: disable=attribute-defined-outside-init
                 },
                 "sensors": {
                     "water_temperature": 29.1,
-                    "domestic_hot_water_setpoint": 60.0,
                     "dhw_temperature": 46.3,
                     "intended_boiler_temperature": 35.0,
                     "modulation_level": 52,

@@ -4,8 +4,6 @@ Plugwise backend module for Home Assistant Core.
 """
 from __future__ import annotations
 
-import datetime as dt
-
 import aiohttp
 from defusedxml import ElementTree as etree
 
@@ -26,7 +24,6 @@ from .constants import (
     LOGGER,
     MAX_SETPOINT,
     MIN_SETPOINT,
-    MODULES,
     NOTIFICATIONS,
     RULES,
     SMILES,
@@ -476,9 +473,6 @@ class Smile(SmileComm, SmileData):
     async def _full_update_device(self) -> None:
         """Perform a first fetch of all XML data, needed for initialization."""
         await self._update_domain_objects()
-        self._locations = self._domain_objects.findall("./locations")
-        self._modules = self._domain_objects.findall("./modules")
-        self._appliances = self._domain_objects.findall("./appliances")
 
     async def async_update(self) -> PlugwiseData:
         """Perform an incremental update for updating the various device states."""
@@ -564,7 +558,7 @@ class Smile(SmileComm, SmileData):
         if preset not in list(presets):
             raise PlugwiseError("Plugwise: invalid preset.")
 
-        current_location = self._locations.find(f'location[@id="{loc_id}"]')
+        current_location = self._domain_objects.find(f'location[@id="{loc_id}"]')
         location_name = current_location.find("name").text
         location_type = current_location.find("type").text
 
@@ -623,7 +617,7 @@ class Smile(SmileComm, SmileData):
         temp = str(temperature)
         thermostat_id: str | None = None
         locator = f'appliance[@id="{self._heater_id}"]/actuator_functionalities/thermostat_functionality'
-        if th_func_list := self._appliances.findall(locator):
+        if th_func_list := self._domain_objects.findall(locator):
             for th_func in th_func_list:
                 if th_func.find("type").text == key:
                     thermostat_id = th_func.attrib["id"]
@@ -657,7 +651,7 @@ class Smile(SmileComm, SmileData):
         """
         for member in members:
             locator = f'appliance[@id="{member}"]/{switch.actuator}/{switch.func_type}'
-            switch_id = self._appliances.find(locator).attrib["id"]
+            switch_id = self._domain_objects.find(locator).attrib["id"]
             uri = f"{APPLIANCES};id={member}/{switch.device};id={switch_id}"
             data = f"<{switch.func_type}><{switch.func}>{state}</{switch.func}></{switch.func_type}>"
 
@@ -690,7 +684,7 @@ class Smile(SmileComm, SmileData):
             return await self._set_groupswitch_member_state(members, state, switch)
 
         locator = f'appliance[@id="{appl_id}"]/{switch.actuator}/{switch.func_type}'
-        found: list[etree] = self._appliances.findall(locator)
+        found: list[etree] = self._domain_objects.findall(locator)
         for item in found:
             if (sw_type := item.find("type")) is not None:
                 if sw_type.text == switch.act_type:
@@ -707,7 +701,7 @@ class Smile(SmileComm, SmileData):
                 f'appliance[@id="{appl_id}"]/{switch.actuator}/{switch.func_type}/lock'
             )
             # Don't bother switching a relay when the corresponding lock-state is true
-            if self._appliances.find(locator).text == "true":
+            if self._domain_objects.find(locator).text == "true":
                 raise PlugwiseError("Plugwise: the locked Relay was not switched.")
 
         await self._request(uri, method="put", data=data)
