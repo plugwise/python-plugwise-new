@@ -121,41 +121,11 @@ class TestPlugwise:  # pylint: disable=attribute-defined-outside-init
         return app
 
     # Wrapper for appliances uri
-    async def smile_appliances(self, request):
-        """Render setup specific appliances endpoint."""
-        userdata = os.path.join(
-            os.path.dirname(__file__),
-            f"../userdata/{self.smile_setup}/core.appliances.xml",
-        )
-        with open(userdata, encoding="utf-8") as filedata:
-            data = filedata.read()
-        return aiohttp.web.Response(text=data)
-
     async def smile_domain_objects(self, request):
         """Render setup specific domain objects endpoint."""
         userdata = os.path.join(
             os.path.dirname(__file__),
             f"../userdata/{self.smile_setup}/core.domain_objects.xml",
-        )
-        with open(userdata, encoding="utf-8") as filedata:
-            data = filedata.read()
-        return aiohttp.web.Response(text=data)
-
-    async def smile_locations(self, request):
-        """Render setup specific locations endpoint."""
-        userdata = os.path.join(
-            os.path.dirname(__file__),
-            f"../userdata/{self.smile_setup}/core.locations.xml",
-        )
-        with open(userdata, encoding="utf-8") as filedata:
-            data = filedata.read()
-        return aiohttp.web.Response(text=data)
-
-    async def smile_modules(self, request):
-        """Render setup specific modules endpoint."""
-        userdata = os.path.join(
-            os.path.dirname(__file__),
-            f"../userdata/{self.smile_setup}/core.modules.xml",
         )
         with open(userdata, encoding="utf-8") as filedata:
             data = filedata.read()
