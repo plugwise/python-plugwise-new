@@ -4,8 +4,6 @@ Plugwise backend module for Home Assistant Core.
 """
 from __future__ import annotations
 
-import datetime as dt
-
 import aiohttp
 from defusedxml import ElementTree as etree
 
@@ -26,7 +24,6 @@ from .constants import (
     LOGGER,
     MAX_SETPOINT,
     MIN_SETPOINT,
-    MODULES,
     NOTIFICATIONS,
     RULES,
     SMILES,
