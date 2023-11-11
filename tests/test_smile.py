@@ -1272,7 +1272,7 @@ class TestPlugwise:  # pylint: disable=attribute-defined-outside-init
             "1772a4ea304041adb83f357b751341ff",
             "e2f4322d57924fa090fbbc48b3a140dc",
             "ad4838d7d35c4d6ea796ee12ae5aedf8",
-            "e8ef2a01ed3b4139a53bf749204fe6b4"
+            "e8ef2a01ed3b4139a53bf749204fe6b4",
         ]
 
         result = await self.tinker_thermostat(
