@@ -613,7 +613,7 @@ class TestPlugwise:  # pylint: disable=attribute-defined-outside-init
             _LOGGER.info("  + failed as intended")
             return False
 
-     @pytest.mark.asyncio
+    @pytest.mark.asyncio
     async def test_connect_p1v4_442_single(self):
         """Test a P1 firmware 4.4 single-phase setup."""
         testdata = {
