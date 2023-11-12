@@ -151,39 +151,7 @@ class Smile(SmileComm, SmileData):
         SmileData.__init__(self)
 
         self.smile_hostname: str | None = None
-        self._previous_day_number: str = "0"
         self._target_smile: str | None = None
-
-    async def connect(self) -> bool:
-        """Connect to Plugwise device and determine its name, type and version."""
-        result = await self._request(DOMAIN_OBJECTS)
-        vendor_names = result.findall("./module/vendor_name")
-
-        names: list[str] = []
-        for name in vendor_names:
-            names.append(name.text)
-
-        vendor_models = result.findall("./module/vendor_model")
-        models: list[str] = []
-        for model in vendor_models:
-            models.append(model.text)
-
-        dsmrmain = result.find("./module/protocols/dsmrmain")
-        if "Plugwise" not in names and dsmrmain is None:  # pragma: no cover
-            LOGGER.error(
-                "Connected but expected text not returned, we got %s. Please create"
-                " an issue on http://github.com/plugwise/python-plugwise",
-                result,
-            )
-            raise ResponseError
-
-        # Determine smile specifics
-        await self._smile_detect(result, dsmrmain)
-
-        # Update all endpoints on first connect
-        await self._full_update_device()
-
-        return True
 
     async def _smile_detect(self, result: etree, dsmrmain: etree) -> None:
         """Helper-function for connect().
@@ -223,11 +191,8 @@ class Smile(SmileComm, SmileData):
         self.smile_type = SMILES[self._target_smile].smile_type
         self.smile_version = (self.smile_fw_version, ver)
 
-    async def _update_domain_objects(self) -> None:
-        """Helper-function for smile.py: full_update_device() and async_update().
-
-        Request domain_objects data.
-        """
+    async def _update_device(self) -> None:
+        """Perform a fetch of the required XML data."""
         self._domain_objects = await self._request(DOMAIN_OBJECTS)
 
         # If Plugwise notifications present:
@@ -245,15 +210,42 @@ class Smile(SmileComm, SmileData):
                     f"{self._endpoint}{DOMAIN_OBJECTS}",
                 )
 
-    async def _full_update_device(self) -> None:
-        """Perform a first fetch of all XML data, needed for initialization."""
-        await self._update_domain_objects()
+    async def connect(self) -> bool:
+        """Connect to Plugwise device and determine its name, type and version."""
+        result = await self._request(DOMAIN_OBJECTS)
+        vendor_names = result.findall("./module/vendor_name")
+
+        names: list[str] = []
+        for name in vendor_names:
+            names.append(name.text)
+
+        vendor_models = result.findall("./module/vendor_model")
+        models: list[str] = []
+        for model in vendor_models:
+            models.append(model.text)
+
+        dsmrmain = result.find("./module/protocols/dsmrmain")
+        if "Plugwise" not in names and dsmrmain is None:  # pragma: no cover
+            LOGGER.error(
+                "Connected but expected text not returned, we got %s. Please create"
+                " an issue on http://github.com/plugwise/python-plugwise",
+                result,
+            )
+            raise ResponseError
+
+        # Determine smile specifics
+        await self._smile_detect(result, dsmrmain)
+
+        # Update all endpoints on first connect
+        await self._update_device()
+
+        return True
 
     async def async_update(self) -> PlugwiseData:
-        """Perform an incremental update for updating the various device states."""
+        """Perform an update."""
         self.gw_data: GatewayData = {}
         self.gw_devices: dict[str, DeviceData] = {}
-        await self._full_update_device()
+        await self._update_device()
         self.get_all_devices()
 
         return PlugwiseData(self.gw_data, self.gw_devices)
