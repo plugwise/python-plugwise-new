@@ -56,7 +56,6 @@ class SmileData(SmileHelper):
 
             remove_empty_platform_dicts(device)
 
-
     def get_all_devices(self) -> None:
         """Determine the evices present from the obtained XML-data.
 
@@ -71,6 +70,7 @@ class SmileData(SmileHelper):
         self.device_list = []
         for device in self.gw_devices:
             self.device_list.append(device)
+
 
 class Smile(SmileComm, SmileData):
     """The Plugwise SmileConnect class."""
@@ -176,7 +176,7 @@ class Smile(SmileComm, SmileData):
             LOGGER.error(
                 "Connected but expected text not returned, we got %s. Please create"
                 " an issue on http://github.com/plugwise/python-plugwise",
-                result,
+                names,
             )
             raise ResponseError
 
