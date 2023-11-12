@@ -83,6 +83,8 @@ class Smile(SmileComm, SmileData):
             self.smile_hw_version = gateway.find("hardware_version").text
             self.smile_hostname = gateway.find("hostname").text
             self.smile_mac_address = gateway.find("mac_address").text
+        else:
+            LOGGER.error("Looks like your Plugwise Smile is a legacy-device")
 
         if model == "Unknown" or self.smile_fw_version is None:  # pragma: no cover
             # Corner case check
