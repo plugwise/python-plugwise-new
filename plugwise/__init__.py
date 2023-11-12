@@ -32,7 +32,7 @@ class SmileData(SmileHelper):
     """The Plugwise Smile main class."""
 
     def _update_gw_devices(self) -> None:
-        """Helper-function for _all_device_data() and async_update().
+        """Helper-function for get_all_devices() and async_update().
 
         Collect data for each device and add to self.gw_devices.
         """
@@ -56,18 +56,6 @@ class SmileData(SmileHelper):
 
             remove_empty_platform_dicts(device)
 
-    def _all_device_data(self) -> None:
-        """Helper-function for get_all_devices().
-
-        Collect data for each device and add to self.gw_data and self.gw_devices.
-        """
-        self._update_gw_devices()
-        self._update_gw_data()
-
-        self.device_items = self._count
-        self.device_list = []
-        for device in self.gw_devices:
-            self.device_list.append(device)
 
     def get_all_devices(self) -> None:
         """Determine the evices present from the obtained XML-data.
@@ -75,11 +63,14 @@ class SmileData(SmileHelper):
         Run this functions once to gather the initial device configuration,
         then regularly run async_update() to refresh the device data.
         """
-        # Gather all the devices and their initial data
         self._all_appliances()
-        # Collect the remaining data for all device
-        self._all_device_data()
+        self._update_gw_devices()
+        self._update_gw_data()
 
+        self.device_items = self._count
+        self.device_list = []
+        for device in self.gw_devices:
+            self.device_list.append(device)
 
 class Smile(SmileComm, SmileData):
     """The Plugwise SmileConnect class."""
@@ -109,13 +100,13 @@ class Smile(SmileComm, SmileData):
         self.smile_hostname: str | None = None
         self._target_smile: str | None = None
 
-    async def _smile_detect(self, result: etree, dsmrmain: etree) -> None:
+    async def _smile_detect(self, xml: etree, dsmrmain: etree) -> None:
         """Helper-function for connect().
 
         Detect which type of Smile is connected.
         """
         model: str = "Unknown"
-        if (gateway := result.find("./gateway")) is not None:
+        if (gateway := xml.find("./gateway")) is not None:
             if (v_model := gateway.find("vendor_model")) is not None:
                 model = v_model.text
             self.smile_fw_version = gateway.find("firmware_version").text
@@ -168,19 +159,19 @@ class Smile(SmileComm, SmileData):
 
     async def connect(self) -> bool:
         """Connect to Plugwise device and determine its name, type and version."""
-        result = await self._request(DOMAIN_OBJECTS)
-        vendor_names = result.findall("./module/vendor_name")
+        self._domain_objects = await self._request(DOMAIN_OBJECTS)
 
+        vendor_names = self._domain_objects.findall("./module/vendor_name")
         names: list[str] = []
         for name in vendor_names:
             names.append(name.text)
 
-        vendor_models = result.findall("./module/vendor_model")
+        vendor_models = self._domain_objects.findall("./module/vendor_model")
         models: list[str] = []
         for model in vendor_models:
             models.append(model.text)
 
-        dsmrmain = result.find("./module/protocols/dsmrmain")
+        dsmrmain = self._domain_objects.find("./module/protocols/dsmrmain")
         if "Plugwise" not in names and dsmrmain is None:  # pragma: no cover
             LOGGER.error(
                 "Connected but expected text not returned, we got %s. Please create"
@@ -190,10 +181,7 @@ class Smile(SmileComm, SmileData):
             raise ResponseError
 
         # Determine smile specifics
-        await self._smile_detect(result, dsmrmain)
-
-        # Update all endpoints on first connect
-        await self._update_device()
+        await self._smile_detect(self._domain_objects, dsmrmain)
 
         return True
 
