@@ -5,7 +5,7 @@ Plugwise Smile protocol helpers.
 from __future__ import annotations
 
 import asyncio
-import datetime as dt
+# import datetime as dt
 from typing import cast
 
 # This way of importing aiohttp is because of patch/mocking in testing (aiohttp timeouts)
@@ -19,44 +19,44 @@ from munch import Munch
 import semver
 
 from .constants import (
-    ACTIVE_ACTUATORS,
+    #    ACTIVE_ACTUATORS,
     #    ACTUATOR_CLASSES,
     #     ADAM,
     #     ANNA,
-    ATTR_NAME,
+    #     ATTR_NAME,
     ATTR_UNIT_OF_MEASUREMENT,
-    BINARY_SENSORS,
-    DATA,
+    #     BINARY_SENSORS,
+    #     DATA,
     #     DEVICE_MEASUREMENTS,
-    DHW_SETPOINT,
+    #     DHW_SETPOINT,
     ENERGY_KILO_WATT_HOUR,
-    ENERGY_WATT_HOUR,
+    #     ENERGY_WATT_HOUR,
     #     HEATER_CENTRAL_MEASUREMENTS,
-    LIMITS,
+    #     LIMITS,
     #     LOCATIONS,
     LOGGER,
     #     NONE,
-    OBSOLETE_MEASUREMENTS,
+    #     OBSOLETE_MEASUREMENTS,
     P1_MEASUREMENTS,
     POWER_WATT,
-    SENSORS,
+    #     SENSORS,
     #     SPECIAL_PLUG_TYPES,
     #     SWITCH_GROUP_TYPES,
-    SWITCHES,
-    TEMP_CELSIUS,
+    #     SWITCHES,
+    #     TEMP_CELSIUS,
     THERMOSTAT_CLASSES,
     #     TOGGLES,
-    UOM,
-    ActuatorData,
-    ActuatorDataType,
-    ActuatorType,
+    #     UOM,
+    #     ActuatorData,
+    #     ActuatorDataType,
+    #     ActuatorType,
     ApplianceType,
-    BinarySensorType,
+    #     BinarySensorType,
     DeviceData,
     GatewayData,
     ModelData,
     SensorType,
-    SwitchType,
+    #     SwitchType,
     ThermoLoc,
     #     ToggleNameType,
 )
