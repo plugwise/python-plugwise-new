@@ -467,7 +467,7 @@ class SmileHelper:
 
         #     return appl
 
-        # Collect info from power-related devices - ### NOT USED FOR P1 !? ###
+        # Collect info from Plugs, Cirlces, Stealths
         # appl = self._energy_device_info_finder(appliance, appl)
 
         # return appl
