@@ -253,6 +253,23 @@ class SmileHelper:
         self.smile_zigbee_mac_address: str | None = None
         self.therms_with_offset_func: list[str] = []
 
+    def _check_availability(
+        self, device: DeviceData, device_data: DeviceData
+    ) -> DeviceData:
+        """Helper-function for _get_device_data().
+
+        Provide availability status for the wired-commected devices.
+        """
+        if device["dev_class"] == "smartmeter":
+            device_data["available"] = True
+            self._count += 1
+            for data in self._notifications.values():
+                for msg in data.values():
+                    if "P1 does not seem to be connected to a smart meter" in msg:
+                        device_data["available"] = False
+
+        return device_data
+
     def smile(self, name: str) -> bool:
         """Helper-function checking the smile-name."""
         return self.smile_name == name

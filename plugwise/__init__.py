@@ -43,6 +43,19 @@ def remove_empty_platform_dicts(data: DeviceData) -> DeviceData:
 class SmileData(SmileHelper):
     """The Plugwise Smile main class."""
 
+    def _get_device_data(self, dev_id: str) -> DeviceData:
+        """Helper-function for _all_device_data() and async_update().
+
+        Provide device-data, based on Location ID (= dev_id), from APPLIANCES.
+        """
+        device = self.gw_devices[dev_id]
+        device_data = self._get_measurement_data(dev_id)
+
+        # Check availability of wired-connected devices
+        self._check_availability(device, device_data)
+
+        return device_data
+
     def _update_gw_devices(self) -> None:
         """Helper-function for _all_device_data() and async_update().
 
@@ -90,39 +103,8 @@ class SmileData(SmileHelper):
         """
         # Gather all the devices and their initial data
         self._all_appliances()
-
         # Collect the remaining data for all device
         self._all_device_data()
-
-    def _check_availability(
-        self, device: DeviceData, device_data: DeviceData
-    ) -> DeviceData:
-        """Helper-function for _get_device_data().
-
-        Provide availability status for the wired-commected devices.
-        """
-        if device["dev_class"] == "smartmeter":
-            device_data["available"] = True
-            self._count += 1
-            for data in self._notifications.values():
-                for msg in data.values():
-                    if "P1 does not seem to be connected to a smart meter" in msg:
-                        device_data["available"] = False
-
-        return device_data
-
-    def _get_device_data(self, dev_id: str) -> DeviceData:
-        """Helper-function for _all_device_data() and async_update().
-
-        Provide device-data, based on Location ID (= dev_id), from APPLIANCES.
-        """
-        device = self.gw_devices[dev_id]
-        device_data = self._get_measurement_data(dev_id)
-
-        # Check availability of wired-connected devices
-        self._check_availability(device, device_data)
-
-        return device_data
 
 
 class Smile(SmileComm, SmileData):
