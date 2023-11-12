@@ -16,7 +16,6 @@ from .constants import (
     DEFAULT_USERNAME,
     DOMAIN_OBJECTS,
     LOGGER,
-    NOTIFICATIONS,
     SMILES,
     DeviceData,
     GatewayData,
