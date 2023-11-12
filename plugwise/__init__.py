@@ -7,36 +7,22 @@ from __future__ import annotations
 import aiohttp
 from defusedxml import ElementTree as etree
 
-# Dict as class
-from munch import Munch
-
 # Version detection
 import semver
 
 from .constants import (
-    ADAM,
-    APPLIANCES,
     DEFAULT_PORT,
     DEFAULT_TIMEOUT,
     DEFAULT_USERNAME,
     DOMAIN_OBJECTS,
-    LOCATIONS,
     LOGGER,
-    MAX_SETPOINT,
-    MIN_SETPOINT,
     NOTIFICATIONS,
-    RULES,
     SMILES,
-    SWITCH_GROUP_TYPES,
-    ZONE_THERMOSTATS,
-    ActuatorData,
     DeviceData,
     GatewayData,
     PlugwiseData,
 )
 from .exceptions import (
-    InvalidSetupError,
-    PlugwiseError,
     ResponseError,
     UnsupportedDeviceError,
 )
@@ -68,9 +54,7 @@ class SmileData(SmileHelper):
             if (
                 "binary_sensors" in device
                 and "plugwise_notification" in device["binary_sensors"]
-            ) or (
-                device_id == self.gateway_id and self.smile_type == "power"
-            ):
+            ) or (device_id == self.gateway_id and self.smile_type == "power"):
                 data["binary_sensors"]["plugwise_notification"] = bool(
                     self._notifications
                 )
@@ -110,7 +94,6 @@ class SmileData(SmileHelper):
 
         # Collect the remaining data for all device
         self._all_device_data()
-
 
     def _check_availability(
         self, device: DeviceData, device_data: DeviceData
