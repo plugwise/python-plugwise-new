@@ -51,6 +51,8 @@ class SmileData(SmileHelper):
         """
         for device_id, device in self.gw_devices.items():
             data = self._get_device_data(device_id)
+
+            # Add/update the plugwise notification(s)
             if (
                 "binary_sensors" in device
                 and "plugwise_notification" in device["binary_sensors"]
@@ -63,17 +65,8 @@ class SmileData(SmileHelper):
 
             remove_empty_platform_dicts(device)
 
-    def _all_device_data(self) -> None:
-        """Helper-function for get_all_devices().
-
-        Collect data for each device and add to self.gw_data and self.gw_devices.
-        """
-        self._update_gw_devices()
-        self.device_items = self._count
-        self.device_list = []
-        for device in self.gw_devices:
-            self.device_list.append(device)
-
+    def _update_gw_data(self) -> None:
+        """Helper-function for get_all_devices()."""
         self.gw_data.update(
             {
                 "gateway_id": self.gateway_id,
@@ -82,6 +75,18 @@ class SmileData(SmileHelper):
                 "smile_name": self.smile_name,
             }
         )
+
+    def _all_device_data(self) -> None:
+        """Helper-function for get_all_devices().
+
+        Collect data for each device and add to self.gw_data and self.gw_devices.
+        """
+        self._update_gw_devices()
+        self._update_gw_data()
+        self.device_items = self._count
+        self.device_list = []
+        for device in self.gw_devices:
+            self.device_list.append(device)
 
     def get_all_devices(self) -> None:
         """Determine the evices present from the obtained XML-data.
