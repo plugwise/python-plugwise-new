@@ -12,40 +12,40 @@ from typing import cast
 from aiohttp import BasicAuth, ClientError, ClientResponse, ClientSession, ClientTimeout
 
 # Time related
-from dateutil import tz
-from dateutil.parser import parse
+# from dateutil import tz
+# from dateutil.parser import parse
 from defusedxml import ElementTree as etree
 from munch import Munch
 import semver
 
 from .constants import (
     ACTIVE_ACTUATORS,
-    ACTUATOR_CLASSES,
-    ADAM,
-    ANNA,
+    #    ACTUATOR_CLASSES,
+    #     ADAM,
+    #     ANNA,
     ATTR_NAME,
     ATTR_UNIT_OF_MEASUREMENT,
     BINARY_SENSORS,
     DATA,
-    DEVICE_MEASUREMENTS,
+    #     DEVICE_MEASUREMENTS,
     DHW_SETPOINT,
     ENERGY_KILO_WATT_HOUR,
     ENERGY_WATT_HOUR,
-    HEATER_CENTRAL_MEASUREMENTS,
+    #     HEATER_CENTRAL_MEASUREMENTS,
     LIMITS,
-    LOCATIONS,
+    #     LOCATIONS,
     LOGGER,
-    NONE,
+    #     NONE,
     OBSOLETE_MEASUREMENTS,
     P1_MEASUREMENTS,
     POWER_WATT,
     SENSORS,
-    SPECIAL_PLUG_TYPES,
-    SWITCH_GROUP_TYPES,
+    #     SPECIAL_PLUG_TYPES,
+    #     SWITCH_GROUP_TYPES,
     SWITCHES,
     TEMP_CELSIUS,
     THERMOSTAT_CLASSES,
-    TOGGLES,
+    #     TOGGLES,
     UOM,
     ActuatorData,
     ActuatorDataType,
@@ -58,7 +58,7 @@ from .constants import (
     SensorType,
     SwitchType,
     ThermoLoc,
-    ToggleNameType,
+    #     ToggleNameType,
 )
 from .exceptions import (
     ConnectionFailedError,
@@ -66,14 +66,14 @@ from .exceptions import (
     InvalidXMLError,
     ResponseError,
 )
-from .util import escape_illegal_xml_characters, format_measure, version_to_model
+from .util import escape_illegal_xml_characters, format_measure  # , version_to_model
 
 
 # def check_model(name: str | None, vendor_name: str | None) -> str | None:
 #     """Model checking before using version_to_model."""
 #    if vendor_name == "Plugwise" and ((model := version_to_model(name)) != "Unknown"):
 #         return model
-# 
+#
 #     return name
 
 
@@ -293,9 +293,9 @@ class SmileHelper:
             }
         )
 
-    def smile(self, name: str) -> bool:
-        """Helper-function checking the smile-name."""
-        return self.smile_name == name
+    # def smile(self, name: str) -> bool:
+    #     """Helper-function checking the smile-name."""
+    #     return self.smile_name == name
 
     def _all_locations(self) -> None:
         """Collect all locations."""
@@ -372,12 +372,12 @@ class SmileHelper:
         #     appl.zigbee_mac = module_data["zigbee_mac_address"]
         #     if appl.zigbee_mac is None:
         #         return None
-        #  
+        #
         #     appl.vendor_name = module_data["vendor_name"]
         #     appl.model = check_model(module_data["vendor_model"], appl.vendor_name)
         #     appl.hardware = module_data["hardware_version"]
         #     appl.firmware = module_data["firmware_version"]
-        # 
+        #
         #     return appl
 
         return appl  # pragma: no cover
@@ -423,7 +423,7 @@ class SmileHelper:
         #     appl.hardware = module_data["hardware_version"]
         #     appl.firmware = module_data["firmware_version"]
         #     appl.zigbee_mac = module_data["zigbee_mac_address"]
-        # 
+        #
         #     return appl
 
         # # Collect heater_central device info
@@ -466,10 +466,10 @@ class SmileHelper:
 
         #     return appl
 
-        # Collect info from power-related devices
-        appl = self._energy_device_info_finder(appliance, appl)
+        # Collect info from power-related devices - ### NOT USED FOR P1 !? ###
+        # appl = self._energy_device_info_finder(appliance, appl)
 
-        return appl
+        # return appl
 
     def _p1_smartmeter_info_finder(self, appl: Munch) -> None:
         """Collect P1 DSMR Smartmeter info."""
