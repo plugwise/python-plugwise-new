@@ -25,36 +25,11 @@ from .exceptions import (
     ResponseError,
     UnsupportedDeviceError,
 )
-from .helper import SmileComm, SmileHelper, remove_empty_platform_dicts
+from .helper import SmileComm, SmileHelper
 
 
 class SmileData(SmileHelper):
-    """The Plugwise Smile main class."""
-
-    def _update_gw_devices(self) -> None:
-        """Helper-function for get_all_devices() and async_update().
-
-        Collect data for each device and add to self.gw_devices.
-        """
-        for device_id, device in self.gw_devices.items():
-            data = self._get_measurement_data(device_id)
-
-            # Check availability of wired-connected devices
-            self._check_availability(device, data)
-
-            # Add/update the plugwise notification(s)
-            if (device_id == self.gateway_id and self.smile_type == "power") or (
-                "binary_sensors" in device
-                and "plugwise_notification" in device["binary_sensors"]
-            ):
-                data["binary_sensors"]["plugwise_notification"] = bool(
-                    self._notifications
-                )
-                self._count += 1
-
-            device.update(data)
-
-            remove_empty_platform_dicts(device)
+    """The Plugwise SmileData class."""
 
     def get_all_devices(self) -> None:
         """Determine the evices present from the obtained XML-data.
@@ -73,7 +48,7 @@ class SmileData(SmileHelper):
 
 
 class Smile(SmileComm, SmileData):
-    """The Plugwise SmileConnect class."""
+    """The main Plugwise Smile class."""
 
     # pylint: disable=too-many-instance-attributes, too-many-public-methods
 
