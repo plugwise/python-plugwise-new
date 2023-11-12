@@ -65,17 +65,6 @@ class SmileData(SmileHelper):
 
             remove_empty_platform_dicts(device)
 
-    def _update_gw_data(self) -> None:
-        """Helper-function for get_all_devices()."""
-        self.gw_data.update(
-            {
-                "gateway_id": self.gateway_id,
-                "item_count": self._count,
-                "notifications": self._notifications,
-                "smile_name": self.smile_name,
-            }
-        )
-
     def _all_device_data(self) -> None:
         """Helper-function for get_all_devices().
 

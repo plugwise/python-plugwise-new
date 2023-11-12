@@ -282,6 +282,17 @@ class SmileHelper:
 
         return device_data
 
+    def _update_gw_data(self) -> None:
+        """Helper-function for get_all_devices()."""
+        self.gw_data.update(
+            {
+                "gateway_id": self.gateway_id,
+                "item_count": self._count,
+                "notifications": self._notifications,
+                "smile_name": self.smile_name,
+            }
+        )
+
     def smile(self, name: str) -> bool:
         """Helper-function checking the smile-name."""
         return self.smile_name == name
