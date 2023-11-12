@@ -25,19 +25,7 @@ from .exceptions import (
     ResponseError,
     UnsupportedDeviceError,
 )
-from .helper import SmileComm, SmileHelper
-
-
-def remove_empty_platform_dicts(data: DeviceData) -> DeviceData:
-    """Helper-function for removing any empty platform dicts."""
-    if not data["binary_sensors"]:
-        data.pop("binary_sensors")
-    if not data["sensors"]:
-        data.pop("sensors")
-    if not data["switches"]:
-        data.pop("switches")
-
-    return data
+from .helper import SmileComm, SmileHelper, remove_empty_platform_dicts
 
 
 class SmileData(SmileHelper):

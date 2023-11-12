@@ -90,6 +90,18 @@ def power_data_local_format(
     return format_measure(val, attrs_uom)
 
 
+def remove_empty_platform_dicts(data: DeviceData) -> DeviceData:
+    """Helper-function for removing any empty platform dicts."""
+    if not data["binary_sensors"]:
+        data.pop("binary_sensors")
+    if not data["sensors"]:
+        data.pop("sensors")
+    if not data["switches"]:
+        data.pop("switches")
+
+    return data
+
+
 class SmileComm:
     """The SmileComm class."""
 
