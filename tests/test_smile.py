@@ -94,29 +94,29 @@ class TestPlugwise:  # pylint: disable=attribute-defined-outside-init
         else:
             app.router.add_get("/core/domain_objects", self.smile_domain_objects)
 
-        # Introducte timeout with 2 seconds, test by setting response to 10ms
-        # Don't actually wait 2 seconds as this will prolongue testing
-        if not raise_timeout:
-            app.router.add_route(
-                "PUT", "/core/locations{tail:.*}", self.smile_set_temp_or_preset
-            )
-            app.router.add_route(
-                "DELETE", "/core/notifications{tail:.*}", self.smile_del_notification
-            )
-            # app.router.add_route("PUT", "/core/rules{tail:.*}", self.smile_set_schedule)
-            app.router.add_route(
-                "DELETE", "/core/notifications{tail:.*}", self.smile_del_notification
-            )
-            app.router.add_route(
-                "PUT", "/core/appliances{tail:.*}", self.smile_set_relay
-            )
-        else:
-            app.router.add_route("PUT", "/core/locations{tail:.*}", self.smile_timeout)
-            app.router.add_route("PUT", "/core/rules{tail:.*}", self.smile_timeout)
-            app.router.add_route("PUT", "/core/appliances{tail:.*}", self.smile_timeout)
-            app.router.add_route(
-                "DELETE", "/core/notifications{tail:.*}", self.smile_timeout
-            )
+        # # Introducte timeout with 2 seconds, test by setting response to 10ms
+        # # Don't actually wait 2 seconds as this will prolongue testing
+        # if not raise_timeout:
+        #     app.router.add_route(
+        #         "PUT", "/core/locations{tail:.*}", self.smile_set_temp_or_preset
+        #     )
+        #     app.router.add_route(
+        #         "DELETE", "/core/notifications{tail:.*}", self.smile_del_notification
+        #     )
+        #     app.router.add_route("PUT", "/core/rules{tail:.*}", self.smile_set_schedule)
+        #     app.router.add_route(
+        #         "DELETE", "/core/notifications{tail:.*}", self.smile_del_notification
+        #     )
+        #     app.router.add_route(
+        #         "PUT", "/core/appliances{tail:.*}", self.smile_set_relay
+        #     )
+        # else:
+        #     app.router.add_route("PUT", "/core/locations{tail:.*}", self.smile_timeout)
+        #     app.router.add_route("PUT", "/core/rules{tail:.*}", self.smile_timeout)
+        #     app.router.add_route("PUT", "/core/appliances{tail:.*}", self.smile_timeout)
+        #     app.router.add_route(
+        #         "DELETE", "/core/notifications{tail:.*}", self.smile_timeout
+        #     )
 
         return app
 
@@ -131,11 +131,11 @@ class TestPlugwise:  # pylint: disable=attribute-defined-outside-init
             data = filedata.read()
         return aiohttp.web.Response(text=data)
 
-    @classmethod
-    async def smile_set_temp_or_preset(cls, request):
-        """Render generic API calling endpoint."""
-        text = "<xml />"
-        raise aiohttp.web.HTTPAccepted(text=text)
+    # @classmethod
+    # async def smile_set_temp_or_preset(cls, request):
+    #     """Render generic API calling endpoint."""
+    #     text = "<xml />"
+    #     raise aiohttp.web.HTTPAccepted(text=text)
 
     # @classmethod
     # async def smile_set_schedule(cls, request):
@@ -143,17 +143,17 @@ class TestPlugwise:  # pylint: disable=attribute-defined-outside-init
     #     text = "<xml />"
     #     raise aiohttp.web.HTTPAccepted(text=text)
 
-    @classmethod
-    async def smile_set_relay(cls, request):
-        """Render generic API calling endpoint."""
-        text = "<xml />"
-        raise aiohttp.web.HTTPAccepted(text=text)
+    # @classmethod
+    # async def smile_set_relay(cls, request):
+    #     """Render generic API calling endpoint."""
+    #     text = "<xml />"
+    #     raise aiohttp.web.HTTPAccepted(text=text)
 
-    @classmethod
-    async def smile_del_notification(cls, request):
-        """Render generic API calling endpoint."""
-        text = "<xml />"
-        raise aiohttp.web.HTTPAccepted(text=text)
+    # @classmethod
+    # async def smile_del_notification(cls, request):
+    #     """Render generic API calling endpoint."""
+    #     text = "<xml />"
+    #     raise aiohttp.web.HTTPAccepted(text=text)
 
     @classmethod
     async def smile_timeout(cls, request):
