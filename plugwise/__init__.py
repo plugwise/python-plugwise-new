@@ -41,11 +41,6 @@ class SmileData(SmileHelper):
         self._update_gw_devices()
         self._update_gw_data()
 
-        self.device_items = self._count
-        self.device_list = []
-        for device in self.gw_devices:
-            self.device_list.append(device)
-
 
 class Smile(SmileComm, SmileData):
     """The main Plugwise Smile class."""

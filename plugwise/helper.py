@@ -308,6 +308,11 @@ class SmileHelper:
 
             remove_empty_platform_dicts(device)
 
+        self.device_items = self._count
+        self.device_list = []
+        for device in self.gw_devices:
+            self.device_list.append(device)
+
     def _update_gw_data(self) -> None:
         """Helper-function for get_all_devices()."""
         self.gw_data.update(
