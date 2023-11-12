@@ -269,9 +269,9 @@ class TestPlugwise:  # pylint: disable=attribute-defined-outside-init
                 _LOGGER.info(" + successfully aborted on credentials missing.")
                 raise pw_exceptions.InvalidAuthentication
 
-        if raise_timeout:
-            _LOGGER.warning("Connecting to device exceeding timeout in handling:")
-            return await self.connect(raise_timeout=True)
+        # if raise_timeout:
+        #     _LOGGER.warning("Connecting to device exceeding timeout in handling:")
+        #     return await self.connect(raise_timeout=True)
 
         try:
             _LOGGER.warning("Connecting to device exceeding timeout in response:")
