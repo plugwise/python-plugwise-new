@@ -671,83 +671,83 @@ class SmileHelper:
 
     #     return schedule_ids
 
-    def _appliance_measurements(
-        self,
-        appliance: etree,
-        data: DeviceData,
-        measurements: dict[str, DATA | UOM],
-    ) -> None:
-        """Helper-function for _get_measurement_data() - collect appliance measurement data."""
-        for measurement, attrs in measurements.items():
-            p_locator = f'.//logs/point_log[type="{measurement}"]/period/measurement'
-            if (appl_p_loc := appliance.find(p_locator)) is not None:
-                # Skip known obsolete measurements
-                updated_date_locator = (
-                    f'.//logs/point_log[type="{measurement}"]/updated_date'
-                )
-                if measurement in OBSOLETE_MEASUREMENTS:
-                    if (
-                        updated_date_key := appliance.find(updated_date_locator)
-                    ) is not None:
-                        updated_date = updated_date_key.text.split("T")[0]
-                        date_1 = dt.datetime.strptime(updated_date, "%Y-%m-%d")
-                        date_2 = dt.datetime.now()
-                        if int((date_2 - date_1).days) > 7:
-                            continue
+    # def _appliance_measurements(
+    #     self,
+    #     appliance: etree,
+    #     data: DeviceData,
+    #     measurements: dict[str, DATA | UOM],
+    # ) -> None:
+    #     """Helper-function for _get_measurement_data() - collect appliance measurement data."""
+    #     for measurement, attrs in measurements.items():
+    #         p_locator = f'.//logs/point_log[type="{measurement}"]/period/measurement'
+    #         if (appl_p_loc := appliance.find(p_locator)) is not None:
+    #             # Skip known obsolete measurements
+    #             updated_date_locator = (
+    #                 f'.//logs/point_log[type="{measurement}"]/updated_date'
+    #             )
+    #             if measurement in OBSOLETE_MEASUREMENTS:
+    #                 if (
+    #                     updated_date_key := appliance.find(updated_date_locator)
+    #                 ) is not None:
+    #                     updated_date = updated_date_key.text.split("T")[0]
+    #                     date_1 = dt.datetime.strptime(updated_date, "%Y-%m-%d")
+    #                     date_2 = dt.datetime.now()
+    #                     if int((date_2 - date_1).days) > 7:
+    #                         continue
 
-                if new_name := getattr(attrs, ATTR_NAME, None):
-                    measurement = new_name
+    #             if new_name := getattr(attrs, ATTR_NAME, None):
+    #                 measurement = new_name
 
-                match measurement:
-                    # measurements with states "on" or "off" that need to be passed directly
-                    case "select_dhw_mode":
-                        data["select_dhw_mode"] = appl_p_loc.text
-                    case _ as measurement if measurement in BINARY_SENSORS:
-                        bs_key = cast(BinarySensorType, measurement)
-                        bs_value = appl_p_loc.text in ["on", "true"]
-                        data["binary_sensors"][bs_key] = bs_value
-                    case _ as measurement if measurement in SENSORS:
-                        s_key = cast(SensorType, measurement)
-                        s_value = format_measure(
-                            appl_p_loc.text, getattr(attrs, ATTR_UNIT_OF_MEASUREMENT)
-                        )
-                        data["sensors"][s_key] = s_value
-                        # Anna: save cooling-related measurements for later use
-                        # Use the local outdoor temperature as reference for turning cooling on/off
-                        if measurement == "cooling_activation_outdoor_temperature":
-                            self._cooling_activation_outdoor_temp = data["sensors"][
-                                "cooling_activation_outdoor_temperature"
-                            ]
-                        if measurement == "cooling_deactivation_threshold":
-                            self._cooling_deactivation_threshold = data["sensors"][
-                                "cooling_deactivation_threshold"
-                            ]
-                        if measurement == "outdoor_air_temperature":
-                            self._outdoor_temp = data["sensors"][
-                                "outdoor_air_temperature"
-                            ]
-                    case _ as measurement if measurement in SWITCHES:
-                        sw_key = cast(SwitchType, measurement)
-                        sw_value = appl_p_loc.text in ["on", "true"]
-                        data["switches"][sw_key] = sw_value
-                    case "c_heating_state":
-                        value = appl_p_loc.text in ["on", "true"]
-                        data["c_heating_state"] = value
-                    case "elga_status_code":
-                        data["elga_status_code"] = int(appl_p_loc.text)
+    #             match measurement:
+    #                 # measurements with states "on" or "off" that need to be passed directly
+    #                 case "select_dhw_mode":
+    #                     data["select_dhw_mode"] = appl_p_loc.text
+    #                 case _ as measurement if measurement in BINARY_SENSORS:
+    #                     bs_key = cast(BinarySensorType, measurement)
+    #                     bs_value = appl_p_loc.text in ["on", "true"]
+    #                     data["binary_sensors"][bs_key] = bs_value
+    #                 case _ as measurement if measurement in SENSORS:
+    #                     s_key = cast(SensorType, measurement)
+    #                     s_value = format_measure(
+    #                         appl_p_loc.text, getattr(attrs, ATTR_UNIT_OF_MEASUREMENT)
+    #                     )
+    #                     data["sensors"][s_key] = s_value
+    #                     # Anna: save cooling-related measurements for later use
+    #                     # Use the local outdoor temperature as reference for turning cooling on/off
+    #                     if measurement == "cooling_activation_outdoor_temperature":
+    #                         self._cooling_activation_outdoor_temp = data["sensors"][
+    #                             "cooling_activation_outdoor_temperature"
+    #                         ]
+    #                     if measurement == "cooling_deactivation_threshold":
+    #                         self._cooling_deactivation_threshold = data["sensors"][
+    #                             "cooling_deactivation_threshold"
+    #                         ]
+    #                     if measurement == "outdoor_air_temperature":
+    #                         self._outdoor_temp = data["sensors"][
+    #                             "outdoor_air_temperature"
+    #                         ]
+    #                 case _ as measurement if measurement in SWITCHES:
+    #                     sw_key = cast(SwitchType, measurement)
+    #                     sw_value = appl_p_loc.text in ["on", "true"]
+    #                     data["switches"][sw_key] = sw_value
+    #                 case "c_heating_state":
+    #                     value = appl_p_loc.text in ["on", "true"]
+    #                     data["c_heating_state"] = value
+    #                 case "elga_status_code":
+    #                     data["elga_status_code"] = int(appl_p_loc.text)
 
-            i_locator = f'.//logs/interval_log[type="{measurement}"]/period/measurement'
-            if (appl_i_loc := appliance.find(i_locator)) is not None:
-                name = cast(SensorType, f"{measurement}_interval")
-                data["sensors"][name] = format_measure(
-                    appl_i_loc.text, ENERGY_WATT_HOUR
-                )
+    #         i_locator = f'.//logs/interval_log[type="{measurement}"]/period/measurement'
+    #         if (appl_i_loc := appliance.find(i_locator)) is not None:
+    #             name = cast(SensorType, f"{measurement}_interval")
+    #             data["sensors"][name] = format_measure(
+    #                 appl_i_loc.text, ENERGY_WATT_HOUR
+    #             )
 
-        self._count += len(data["binary_sensors"])
-        self._count += len(data["sensors"])
-        self._count += len(data["switches"])
-        # Don't count the above top-level dicts, only the remaining single items
-        self._count += len(data) - 3
+    #     self._count += len(data["binary_sensors"])
+    #     self._count += len(data["sensors"])
+    #     self._count += len(data["switches"])
+    #     # Don't count the above top-level dicts, only the remaining single items
+    #     self._count += len(data) - 3
 
     # def _wireless_availablity(self, appliance: etree, data: DeviceData) -> None:
     #     """Helper-function for _get_measurement_data().
@@ -780,60 +780,60 @@ class SmileHelper:
 
     #     return therm_list
 
-    def _get_actuator_functionalities(
-        self, xml: etree, device: DeviceData, data: DeviceData
-    ) -> None:
-        """Helper-function for _get_measurement_data()."""
-        for item in ACTIVE_ACTUATORS:
-            # Skip max_dhw_temperature, not initially valid,
-            # skip thermostat for thermo_sensors
-            if item == "max_dhw_temperature" or (
-                item == "thermostat" and device["dev_class"] == "thermo_sensor"
-            ):
-                continue
+    # def _get_actuator_functionalities(
+    #     self, xml: etree, device: DeviceData, data: DeviceData
+    # ) -> None:
+    #     """Helper-function for _get_measurement_data()."""
+    #     for item in ACTIVE_ACTUATORS:
+    #         # Skip max_dhw_temperature, not initially valid,
+    #         # skip thermostat for thermo_sensors
+    #         if item == "max_dhw_temperature" or (
+    #             item == "thermostat" and device["dev_class"] == "thermo_sensor"
+    #         ):
+    #             continue
 
-            temp_dict: ActuatorData = {}
-            functionality = "thermostat_functionality"
-            if item == "temperature_offset":
-                functionality = "offset_functionality"
+    #         temp_dict: ActuatorData = {}
+    #         functionality = "thermostat_functionality"
+    #         if item == "temperature_offset":
+    #             functionality = "offset_functionality"
 
-            # When there is no updated_date-text, skip the actuator
-            updated_date_location = f'.//actuator_functionalities/{functionality}[type="{item}"]/updated_date'
-            if (
-                updated_date_key := xml.find(updated_date_location)
-            ) is not None and updated_date_key.text is None:
-                continue
+    #         # When there is no updated_date-text, skip the actuator
+    #         updated_date_location = f'.//actuator_functionalities/{functionality}[type="{item}"]/updated_date'
+    #         if (
+    #             updated_date_key := xml.find(updated_date_location)
+    #         ) is not None and updated_date_key.text is None:
+    #             continue
 
-            for key in LIMITS:
-                locator = (
-                    f'.//actuator_functionalities/{functionality}[type="{item}"]/{key}'
-                )
-                if (function := xml.find(locator)) is not None:
-                    if key == "offset":
-                        # Add limits and resolution for temperature_offset,
-                        # not provided by Plugwise in the XML data
-                        temp_dict["lower_bound"] = -2.0
-                        temp_dict["resolution"] = 0.1
-                        temp_dict["upper_bound"] = 2.0
-                        self._count += 3
-                        # Rename offset to setpoint
-                        key = "setpoint"
+    #         for key in LIMITS:
+    #             locator = (
+    #                 f'.//actuator_functionalities/{functionality}[type="{item}"]/{key}'
+    #             )
+    #             if (function := xml.find(locator)) is not None:
+    #                 if key == "offset":
+    #                     # Add limits and resolution for temperature_offset,
+    #                     # not provided by Plugwise in the XML data
+    #                     temp_dict["lower_bound"] = -2.0
+    #                     temp_dict["resolution"] = 0.1
+    #                     temp_dict["upper_bound"] = 2.0
+    #                     self._count += 3
+    #                     # Rename offset to setpoint
+    #                     key = "setpoint"
 
-                    act_key = cast(ActuatorDataType, key)
-                    temp_dict[act_key] = format_measure(function.text, TEMP_CELSIUS)
-                    self._count += 1
+    #                 act_key = cast(ActuatorDataType, key)
+    #                 temp_dict[act_key] = format_measure(function.text, TEMP_CELSIUS)
+    #                 self._count += 1
 
-            if temp_dict:
-                # If domestic_hot_water_setpoint is present as actuator,
-                # rename and remove as sensor
-                if item == DHW_SETPOINT:
-                    item = "max_dhw_temperature"
-                    if DHW_SETPOINT in data["sensors"]:
-                        data["sensors"].pop(DHW_SETPOINT)
-                        self._count -= 1
+    #         if temp_dict:
+    #             # If domestic_hot_water_setpoint is present as actuator,
+    #             # rename and remove as sensor
+    #             if item == DHW_SETPOINT:
+    #                 item = "max_dhw_temperature"
+    #                 if DHW_SETPOINT in data["sensors"]:
+    #                     data["sensors"].pop(DHW_SETPOINT)
+    #                     self._count -= 1
 
-                act_item = cast(ActuatorType, item)
-                data[act_item] = temp_dict
+    #             act_item = cast(ActuatorType, item)
+    #             data[act_item] = temp_dict
 
     # def _get_regulation_mode(self, appliance: etree, data: DeviceData) -> None:
     #     """Helper-function for _get_measurement_data().
