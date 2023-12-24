@@ -972,9 +972,6 @@ class SmileHelper:
             self._appliance_measurements(appliance, data, measurements)
             self._get_lock_state(appliance, data)
 
-            for toggle, name in TOGGLES.items():
-                self._get_toggle_state(appliance, toggle, name, data)
-
             if appliance.find("type").text in ACTUATOR_CLASSES:
                 self._get_actuator_functionalities(appliance, device, data)
 
