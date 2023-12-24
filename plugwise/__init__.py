@@ -452,11 +452,6 @@ class Smile(SmileComm, SmileData):
             match self._target_smile:
                 case "smile_v2":
                     self._modules = await self._request(MODULES)
-                case "smile_v3" | "smile_v4":
-                    self._locations = await self._request(LOCATIONS)
-                case "smile_open_therm_v2" | "smile_open_therm_v3":
-                    self._appliances = await self._request(APPLIANCES)
-                    self._modules = await self._request(MODULES)
                 case self._target_smile if self._target_smile in REQUIRE_APPLIANCES:
                     self._appliances = await self._request(APPLIANCES)
 
