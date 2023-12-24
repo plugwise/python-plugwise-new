@@ -461,7 +461,7 @@ class Smile(SmileComm, SmileData):
         self._previous_day_number = day_number
         return PlugwiseData(self.gw_data, self.gw_devices)
 
-    async def _set_schedule_state_legacy(
+    async def set_schedule_state(
         self, loc_id: str, name: str, status: str
     ) -> None:
         """Helper-function for set_schedule_state()."""
@@ -504,7 +504,7 @@ class Smile(SmileComm, SmileData):
         await self._request(uri, method="put", data=data)
         self._schedule_old_states[loc_id][name] = new_state
 
-    async def _set_preset(self, preset: str) -> None:
+    async def set_preset(self, preset: str) -> None:
         """Set the given Preset on the relevant Thermostat - from DOMAIN_OBJECTS."""
         if (presets := self._presets(loc_id)) is None:
             raise PlugwiseError("Plugwise: no presets available.")  # pragma: no cover
