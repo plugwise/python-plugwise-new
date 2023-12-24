@@ -465,6 +465,16 @@ class Smile(SmileComm, SmileData):
         self, loc_id: str, name: str, status: str
     ) -> None:
         """Helper-function for set_schedule_state()."""
+        # Input checking
+        if status not in ["on", "off"]:
+            raise PlugwiseError("Plugwise: invalid schedule state.")
+        if name is None:
+            if schedule_name := self._last_active[loc_id]:
+                name = schedule_name
+            else:
+                return
+
+        assert isinstance(name, str)
         schedule_rule_id: str | None = None
         for rule in self._domain_objects.findall("rule"):
             if rule.find("name").text == name:
@@ -494,109 +504,18 @@ class Smile(SmileComm, SmileData):
         await self._request(uri, method="put", data=data)
         self._schedule_old_states[loc_id][name] = new_state
 
-    def determine_contexts(
-        self, loc_id: str, name: str, state: str, sched_id: str
-    ) -> etree:
-        """Helper-function for set_schedule_state()."""
-        locator = f'.//*[@id="{sched_id}"]/contexts'
-        contexts = self._domain_objects.find(locator)
-        locator = f'.//*[@id="{loc_id}"].../...'
-        if (subject := contexts.find(locator)) is None:
-            subject = f'<context><zone><location id="{loc_id}" /></zone></context>'
-            subject = etree.fromstring(subject)
-
-        if state == "off":
-            self._last_active[loc_id] = name
-            contexts.remove(subject)
-        if state == "on":
-            contexts.append(subject)
-
-        return etree.tostring(contexts, encoding="unicode").rstrip()
-
-    async def set_schedule_state(
-        self,
-        loc_id: str,
-        new_state: str,
-        name: str | None = None,
-    ) -> None:
-        """Activate/deactivate the Schedule, with the given name, on the relevant Thermostat.
-
-        Determined from - DOMAIN_OBJECTS.
-        Used in HA Core to set the hvac_mode: in practice switch between schedule on - off.
-        """
-        # Input checking
-        if new_state not in ["on", "off"]:
-            raise PlugwiseError("Plugwise: invalid schedule state.")
-        if name is None:
-            if schedule_name := self._last_active[loc_id]:
-                name = schedule_name
-            else:
-                return
-
-        assert isinstance(name, str)
-        if self._smile_legacy:
-            await self._set_schedule_state_legacy(loc_id, name, new_state)
-            return
-
-        schedule_rule = self._rule_ids_by_name(name, loc_id)
-        # Raise an error when the schedule name does not exist
-        if not schedule_rule or schedule_rule is None:
-            raise PlugwiseError("Plugwise: no schedule with this name available.")
-
-        # If no state change is requested, do nothing
-        if new_state == self._schedule_old_states[loc_id][name]:
-            return
-
-        schedule_rule_id: str = next(iter(schedule_rule))
-
-        template = (
-            '<template tag="zone_preset_based_on_time_and_presence_with_override" />'
-        )
-        if not self.smile(ADAM):
-            locator = f'.//*[@id="{schedule_rule_id}"]/template'
-            template_id = self._domain_objects.find(locator).attrib["id"]
-            template = f'<template id="{template_id}" />'
-
-        contexts = self.determine_contexts(loc_id, name, new_state, schedule_rule_id)
-        uri = f"{RULES};id={schedule_rule_id}"
-        data = (
-            f'<rules><rule id="{schedule_rule_id}"><name><![CDATA[{name}]]></name>'
-            f"{template}{contexts}</rule></rules>"
-        )
-        await self._request(uri, method="put", data=data)
-        self._schedule_old_states[loc_id][name] = new_state
-
-    async def _set_preset_legacy(self, preset: str) -> None:
+    async def _set_preset(self, preset: str) -> None:
         """Set the given Preset on the relevant Thermostat - from DOMAIN_OBJECTS."""
-        locator = f'rule/directives/when/then[@icon="{preset}"].../.../...'
-        rule = self._domain_objects.find(locator)
-        data = f'<rules><rule id="{rule.attrib["id"]}"><active>true</active></rule></rules>'
-
-        await self._request(RULES, method="put", data=data)
-
-    async def set_preset(self, loc_id: str, preset: str) -> None:
-        """Set the given Preset on the relevant Thermostat - from LOCATIONS."""
         if (presets := self._presets(loc_id)) is None:
             raise PlugwiseError("Plugwise: no presets available.")  # pragma: no cover
         if preset not in list(presets):
             raise PlugwiseError("Plugwise: invalid preset.")
 
-        if self._smile_legacy:
-            await self._set_preset_legacy(preset)
-            return
+        locator = f'rule/directives/when/then[@icon="{preset}"].../.../...'
+        rule = self._domain_objects.find(locator)
+        data = f'<rules><rule id="{rule.attrib["id"]}"><active>true</active></rule></rules>'
 
-        current_location = self._locations.find(f'location[@id="{loc_id}"]')
-        location_name = current_location.find("name").text
-        location_type = current_location.find("type").text
-
-        uri = f"{LOCATIONS};id={loc_id}"
-        data = (
-            "<locations><location"
-            f' id="{loc_id}"><name>{location_name}</name><type>{location_type}'
-            f"</type><preset>{preset}</preset></location></locations>"
-        )
-
-        await self._request(uri, method="put", data=data)
+        await self._request(RULES, method="put", data=data)
 
     async def set_temperature(self, loc_id: str, items: dict[str, float]) -> None:
         """Set the given Temperature on the relevant Thermostat."""
@@ -718,29 +637,6 @@ class Smile(SmileComm, SmileData):
             # Don't bother switching a relay when the corresponding lock-state is true
             if self._appliances.find(locator).text == "true":
                 raise PlugwiseError("Plugwise: the locked Relay was not switched.")
-
-        await self._request(uri, method="put", data=data)
-
-    async def set_regulation_mode(self, mode: str) -> None:
-        """Set the heating regulation mode."""
-        if mode not in self._reg_allowed_modes:
-            raise PlugwiseError("Plugwise: invalid regulation mode.")
-
-        uri = f"{APPLIANCES};type=gateway/regulation_mode_control"
-        duration = ""
-        if "bleeding" in mode:
-            duration = "<duration>300</duration>"
-        data = f"<regulation_mode_control_functionality>{duration}<mode>{mode}</mode></regulation_mode_control_functionality>"
-
-        await self._request(uri, method="put", data=data)
-
-    async def set_dhw_mode(self, mode: str) -> None:
-        """Set the domestic hot water heating regulation mode."""
-        if mode not in self._dhw_allowed_modes:
-            raise PlugwiseError("Plugwise: invalid dhw mode.")
-
-        uri = f"{APPLIANCES};type=heater_central/domestic_hot_water_mode_control"
-        data = f"<domestic_hot_water_mode_control_functionality><mode>{mode}</mode></domestic_hot_water_mode_control_functionality>"
 
         await self._request(uri, method="put", data=data)
 
