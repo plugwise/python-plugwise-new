@@ -669,24 +669,11 @@ class SmileHelper:
 
         return matched_locations
 
-    def _control_state(self, loc_id: str) -> str | bool:
-        """Helper-function for _device_data_adam().
-
-        Adam: find the thermostat control_state of a location, from DOMAIN_OBJECTS.
-        Represents the heating/cooling demand-state of the local master thermostat.
-        Note: heating or cooling can still be active when the setpoint has been reached.
-        """
-        locator = f'location[@id="{loc_id}"]'
-        if (location := self._domain_objects.find(locator)) is not None:
-            locator = './actuator_functionalities/thermostat_functionality[type="thermostat"]/control_state'
-            if (ctrl_state := location.find(locator)) is not None:
-                return str(ctrl_state.text)
-
-        return False
-
-    def _presets_legacy(self) -> dict[str, list[float]]:
+    def _presets(self) -> dict[str, list[float]]:
         """Helper-function for presets() - collect Presets for a legacy Anna."""
         presets: dict[str, list[float]] = {}
+        tag_1 = "zone_setpoint_and_state_based_on_preset"
+        tag_2 = "Thermostat presets"
         for directive in self._domain_objects.findall("rule/directives/when/then"):
             if directive is not None and directive.get("icon") is not None:
                 # Ensure list of heating_setpoint, cooling_setpoint
@@ -694,43 +681,6 @@ class SmileHelper:
                     float(directive.attrib["temperature"]),
                     0,
                 ]
-
-        return presets
-
-    def _presets(self, loc_id: str) -> dict[str, list[float]]:
-        """Collect Presets for a Thermostat based on location_id."""
-        presets: dict[str, list[float]] = {}
-        tag_1 = "zone_setpoint_and_state_based_on_preset"
-        tag_2 = "Thermostat presets"
-
-        if self._smile_legacy:
-            return self._presets_legacy()
-
-        if not (rule_ids := self._rule_ids_by_tag(tag_1, loc_id)):
-            if not (rule_ids := self._rule_ids_by_name(tag_2, loc_id)):
-                return presets  # pragma: no cover
-
-        for rule_id in rule_ids:
-            directives: etree = self._domain_objects.find(
-                f'rule[@id="{rule_id}"]/directives'
-            )
-            for directive in directives:
-                preset = directive.find("then").attrib
-                if "setpoint" in preset:
-                    presets[directive.attrib["preset"]] = [  # pragma: no cover
-                        DEFAULT_PW_MIN,
-                        float(preset["setpoint"]),
-                    ]
-                    if not self._cooling_present or not self._cooling_enabled:
-                        presets[directive.attrib["preset"]] = [
-                            float(preset["setpoint"]),
-                            DEFAULT_PW_MAX,
-                        ]
-                else:
-                    presets[directive.attrib["preset"]] = [
-                        float(preset["heating_setpoint"]),
-                        float(preset["cooling_setpoint"]),
-                    ]
 
         return presets
 
@@ -1125,7 +1075,7 @@ class SmileHelper:
                 if "slaves" in tl_loc_id and dev_id in tl_loc_id["slaves"]:
                     device["dev_class"] = "thermo_sensor"
 
-    def _thermostat_uri_legacy(self) -> str:
+    def _thermostat_uri(self) -> str:
         """Helper-function for _thermostat_uri().
 
         Determine the location-set_temperature uri - from APPLIANCES.
@@ -1134,19 +1084,6 @@ class SmileHelper:
         appliance_id = self._appliances.find(locator).attrib["id"]
 
         return f"{APPLIANCES};id={appliance_id}/thermostat"
-
-    def _thermostat_uri(self, loc_id: str) -> str:
-        """Helper-function for smile.py: set_temperature().
-
-        Determine the location-set_temperature uri - from LOCATIONS.
-        """
-        if self._smile_legacy:
-            return self._thermostat_uri_legacy()
-
-        locator = f'./location[@id="{loc_id}"]/actuator_functionalities/thermostat_functionality'
-        thermostat_functionality_id = self._locations.find(locator).attrib["id"]
-
-        return f"{LOCATIONS};id={loc_id}/thermostat;id={thermostat_functionality_id}"
 
     def _get_group_switches(self) -> dict[str, DeviceData]:
         """Helper-function for smile.py: get_all_devices().
@@ -1355,17 +1292,11 @@ class SmileHelper:
         self._count += len(direct_data["sensors"])
         return direct_data
 
-    def _preset(self, loc_id: str) -> str | None:
+    def _preset(self) -> str | None:
         """Helper-function for smile.py: device_data_climate().
 
-        Collect the active preset based on Location ID.
+        Collect the active preset.
         """
-        if not self._smile_legacy:
-            locator = f'./location[@id="{loc_id}"]/preset'
-            if (preset := self._domain_objects.find(locator)) is not None:
-                return str(preset.text)
-            return None
-
         locator = "./rule[active='true']/directives/when/then"
         if (
             not (active_rule := etree_to_dict(self._domain_objects.find(locator)))
@@ -1375,16 +1306,15 @@ class SmileHelper:
 
         return active_rule["icon"]
 
-    def _schedules_legacy(
-        self,
-        avail: list[str],
-        location: str,
-        sel: str,
-    ) -> tuple[list[str], str]:
+    def _schedules(self, location: str) -> tuple[list[str], str]:
         """Helper-function for _schedules().
 
         Collect available schedules/schedules for the legacy thermostat.
         """
+
+        available: list[str] = [NONE]
+        rule_ids: dict[str, str] = {}
+        selected = NONE
         name: str | None = None
 
         search = self._domain_objects
@@ -1400,72 +1330,12 @@ class SmileHelper:
             active = result.text == "on"
 
         if name is not None:
-            avail = [name]
+            available = [name]
             if active:
-                sel = name
-
-        self._last_active[location] = "".join(map(str, avail))
-        return avail, sel
-
-    def _schedules(self, location: str) -> tuple[list[str], str]:
-        """Helper-function for smile.py: _device_data_climate().
-
-        Obtain the available schedules/schedules. Adam: a schedule can be connected to more than one location.
-        NEW: when a location_id is present then the schedule is active. Valid for both Adam and non-legacy Anna.
-        """
-        available: list[str] = [NONE]
-        rule_ids: dict[str, str] = {}
-        selected = NONE
-
-        # Legacy Anna schedule, only one schedule allowed
-        if self._smile_legacy:
-            return self._schedules_legacy(available, location, selected)
-
-        # Adam schedules, one schedule can be linked to various locations
-        # self._last_active contains the locations and the active schedule name per location, or None
-        if location not in self._last_active:
-            self._last_active[location] = None
-
-        tag = "zone_preset_based_on_time_and_presence_with_override"
-        if not (rule_ids := self._rule_ids_by_tag(tag, location)):
-            return available, selected
-
-        schedules: list[str] = []
-        for rule_id, loc_id in rule_ids.items():
-            name = self._domain_objects.find(f'./rule[@id="{rule_id}"]/name').text
-            locator = f'./rule[@id="{rule_id}"]/directives'
-            # Show an empty schedule as no schedule found
-            if not self._domain_objects.find(locator):
-                continue
-
-            available.append(name)
-            if location == loc_id:
                 selected = name
-                self._last_active[location] = selected
-            schedules.append(name)
 
-        if schedules:
-            available.remove(NONE)
-            if self._last_active.get(location) is None:
-                self._last_active[location] = self._last_used_schedule(schedules)
-
+        self._last_active[location] = "".join(map(str, available))
         return available, selected
-
-    def _last_used_schedule(self, schedules: list[str]) -> str:
-        """Helper-function for _schedules().
-
-        Determine the last-used schedule based on the modified date.
-        """
-        epoch = dt.datetime(1970, 1, 1, tzinfo=tz.tzutc())
-        schedules_dates: dict[str, float] = {}
-
-        for name in schedules:
-            result = self._domain_objects.find(f'./rule[name="{name}"]')
-            schedule_date = result.find("modified_date").text
-            schedule_time = parse(schedule_date)
-            schedules_dates[name] = (schedule_time - epoch).total_seconds()
-
-        return sorted(schedules_dates.items(), key=lambda kv: kv[1])[-1][0]
 
     def _object_value(self, obj_id: str, measurement: str) -> float | int | None:
         """Helper-function for smile.py: _get_device_data() and _device_data_anna().
@@ -1496,24 +1366,3 @@ class SmileHelper:
             if (found := xml.find(locator)) is not None:
                 data["switches"]["lock"] = found.text == "true"
                 self._count += 1
-
-    def _get_toggle_state(
-        self, xml: etree, toggle: str, name: ToggleNameType, data: DeviceData
-    ) -> None:
-        """Helper-function for _get_measurement_data().
-
-        Obtain the toggle state of a 'toggle' = switch.
-        """
-        if xml.find("type").text == "heater_central":
-            locator = "./actuator_functionalities/toggle_functionality"
-            if found := xml.findall(locator):
-                for item in found:
-                    if (toggle_type := item.find("type")) is not None:
-                        if toggle_type.text == toggle:
-                            data["switches"][name] = item.find("state").text == "on"
-                            self._count += 1
-                            # Remove the cooling_enabled binary_sensor when the corresponding switch is present
-                            # Except for Elga
-                            if toggle == "cooling_enabled" and not self._elga:
-                                data["binary_sensors"].pop("cooling_enabled")
-                                self._count -= 1
