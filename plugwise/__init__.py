@@ -599,14 +599,14 @@ class Smile(SmileComm, SmileData):
             switch.func_type = "toggle_functionality"
             switch.act_type = "domestic_hot_water_comfort_mode"
 
-        if model == "cooling_ena_switch":
-            switch.device = "toggle"
-            switch.func_type = "toggle_functionality"
-            switch.act_type = "cooling_enabled"
+       # if model == "cooling_ena_switch":
+       #     switch.device = "toggle"
+       #     switch.func_type = "toggle_functionality"
+       #     switch.act_type = "cooling_enabled"
 
-        if model == "lock":
-            switch.func = "lock"
-            state = "false" if state == "off" else "true"
+       # if model == "lock":
+       #     switch.func = "lock"
+       #     state = "false" if state == "off" else "true"
 
         if self._stretch_v2:
             switch.actuator = "actuators"
