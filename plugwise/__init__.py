@@ -517,7 +517,7 @@ class Smile(SmileComm, SmileData):
 
         await self._request(RULES, method="put", data=data)
 
-    async def set_temperature(self, loc_id: str, items: dict[str, float]) -> None:
+    async def set_temperature(self, items: dict[str, float]) -> None:
         """Set the given Temperature on the relevant Thermostat."""
         setpoint: float | None = None
 
@@ -530,7 +530,7 @@ class Smile(SmileComm, SmileData):
             )  # pragma: no cover"
 
         temperature = str(setpoint)
-        uri = self._thermostat_uri(loc_id)
+        uri = self._thermostat_uri()
         data = (
             "<thermostat_functionality><setpoint>"
             f"{temperature}</setpoint></thermostat_functionality>"
