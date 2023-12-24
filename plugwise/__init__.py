@@ -163,9 +163,9 @@ class SmileData(SmileHelper):
         device_data["preset_modes"] = None
         device_data["active_preset"] = None
         self._count += 2
-        if presets := self._presets(loc_id):
+        if presets := self._presets():
             device_data["preset_modes"] = list(presets)
-            device_data["active_preset"] = self._preset(loc_id)
+            device_data["active_preset"] = self._preset()
 
         # Schedule
         avail_schedules, sel_schedule = self._schedules(loc_id)
