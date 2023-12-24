@@ -153,31 +153,6 @@ class SmileData(SmileHelper):
         self._count += 1
         return device_data
 
-    def _device_data_adam(
-        self, device: DeviceData, device_data: DeviceData
-    ) -> DeviceData:
-        """Helper-function for _get_device_data().
-
-        Determine Adam heating-status for on-off heating via valves.
-        """
-        # Indicate heating_state based on valves being open in case of city-provided heating
-        if (
-            self.smile(ADAM)
-            and device.get("dev_class") == "heater_central"
-            and self._on_off_device
-            and isinstance(self._heating_valves(), int)
-        ):
-            device_data["binary_sensors"]["heating_state"] = self._heating_valves() != 0
-
-        return device_data
-
-    def check_reg_mode(self, mode: str) -> bool:
-        """Helper-function for device_data_climate()."""
-        gateway = self.gw_devices[self.gateway_id]
-        return (
-            "regulation_modes" in gateway and gateway["select_regulation_mode"] == mode
-        )
-
     def _device_data_climate(
         self, device: DeviceData, device_data: DeviceData
     ) -> DeviceData:
@@ -211,9 +186,6 @@ class SmileData(SmileHelper):
         self._count += 1
         if sel_schedule == "None":
             device_data["mode"] = "heat"
-
-        if self.check_reg_mode("off"):
-            device_data["mode"] = "off"
 
         if "None" not in avail_schedules:
             loc_schedule_states = {}
@@ -287,8 +259,6 @@ class SmileData(SmileHelper):
 
         # Switching groups data
         device_data = self._device_data_switching_group(device, device_data)
-        # Specific, not generic Adam data
-        device_data = self._device_data_adam(device, device_data)
         # No need to obtain thermostat data when the device is not a thermostat
         if device["dev_class"] not in ZONE_THERMOSTATS:
             return device_data
