@@ -506,7 +506,7 @@ class Smile(SmileComm, SmileData):
 
     async def set_preset(self, preset: str) -> None:
         """Set the given Preset on the relevant Thermostat - from DOMAIN_OBJECTS."""
-        if (presets := self._presets(loc_id)) is None:
+        if (presets := self._presets()) is None:
             raise PlugwiseError("Plugwise: no presets available.")  # pragma: no cover
         if preset not in list(presets):
             raise PlugwiseError("Plugwise: invalid preset.")
