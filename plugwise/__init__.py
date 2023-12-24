@@ -64,32 +64,6 @@ def remove_empty_platform_dicts(data: DeviceData) -> DeviceData:
 class SmileData(SmileHelper):
     """The Plugwise Smile main class."""
 
-    def update_for_cooling(self, device: DeviceData) -> DeviceData:
-        """Helper-function for adding/updating various cooling-related values."""
-        # For heating + cooling, replace setpoint with setpoint_high/_low
-        if self._cooling_present:
-            thermostat = device["thermostat"]
-            sensors = device["sensors"]
-            temp_dict: ActuatorData = {
-                "setpoint_low": thermostat["setpoint"],
-                "setpoint_high": MAX_SETPOINT,
-            }
-            if self._cooling_enabled:
-                temp_dict = {
-                    "setpoint_low": MIN_SETPOINT,
-                    "setpoint_high": thermostat["setpoint"],
-                }
-            thermostat.pop("setpoint")
-            temp_dict.update(thermostat)
-            device["thermostat"] = temp_dict
-            if "setpoint" in sensors:
-                sensors.pop("setpoint")
-            sensors["setpoint_low"] = temp_dict["setpoint_low"]
-            sensors["setpoint_high"] = temp_dict["setpoint_high"]
-            self._count += 2
-
-        return device
-
     def _update_gw_devices(self) -> None:
         """Helper-function for _all_device_data() and async_update().
 
@@ -112,10 +86,6 @@ class SmileData(SmileHelper):
                 )
                 self._count += 1
             device.update(data)
-
-            # Update for cooling
-            if device["dev_class"] in ZONE_THERMOSTATS and not self.smile(ADAM):
-                self.update_for_cooling(device)
 
             remove_empty_platform_dicts(device)
 
@@ -241,10 +211,6 @@ class SmileData(SmileHelper):
         self._count += 1
         if sel_schedule == "None":
             device_data["mode"] = "heat"
-            if self._cooling_present:
-                device_data["mode"] = (
-                    "cool" if self.check_reg_mode("cooling") else "heat_cool"
-                )
 
         if self.check_reg_mode("off"):
             device_data["mode"] = "off"
@@ -724,26 +690,6 @@ class Smile(SmileComm, SmileData):
 
         if "setpoint" in items:
             setpoint = items["setpoint"]
-
-        if self._cooling_present and not self.smile(ADAM):
-            if "setpoint_high" not in items:
-                raise PlugwiseError(
-                    "Plugwise: failed setting temperature: no valid input provided"
-                )
-            tmp_setpoint_high = items["setpoint_high"]
-            tmp_setpoint_low = items["setpoint_low"]
-            if self._cooling_enabled:  # in cooling mode
-                setpoint = tmp_setpoint_high
-                if tmp_setpoint_low != MIN_SETPOINT:
-                    raise PlugwiseError(
-                        "Plugwise: heating setpoint cannot be changed when in cooling mode"
-                    )
-            else:  # in heating mode
-                setpoint = tmp_setpoint_low
-                if tmp_setpoint_high != MAX_SETPOINT:
-                    raise PlugwiseError(
-                        "Plugwise: cooling setpoint cannot be changed when in heating mode"
-                    )
 
         if setpoint is None:
             raise PlugwiseError(
