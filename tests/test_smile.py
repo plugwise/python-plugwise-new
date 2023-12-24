@@ -519,7 +519,7 @@ class TestPlugwise:  # pylint: disable=attribute-defined-outside-init
                 new_preset = new_preset[1:]
             _LOGGER.info("%s", f"- Adjusting preset to {new_preset}{warning}")
             try:
-                await smile.set_preset(loc_id, new_preset)
+                await smile.set_preset(new_preset)
                 tinker_preset_passed = True
                 _LOGGER.info("  + worked as intended")
             except pw_exceptions.PlugwiseError:
