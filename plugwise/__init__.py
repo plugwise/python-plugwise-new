@@ -24,8 +24,6 @@ from .constants import (
     DOMAIN_OBJECTS,
     LOCATIONS,
     LOGGER,
-    MAX_SETPOINT,
-    MIN_SETPOINT,
     MODULES,
     NOTIFICATIONS,
     REQUIRE_APPLIANCES,
@@ -35,7 +33,6 @@ from .constants import (
     SWITCH_GROUP_TYPES,
     SYSTEM,
     ZONE_THERMOSTATS,
-    ActuatorData,
     DeviceData,
     GatewayData,
     PlugwiseData,
@@ -238,20 +235,6 @@ class SmileData(SmileHelper):
                 device_data["sensors"]["outdoor_temperature"] = outdoor_temperature
                 self._count += 1
 
-            # Show the allowed regulation modes
-            if self._reg_allowed_modes:
-                device_data["regulation_modes"] = self._reg_allowed_modes
-                self._count += 1
-
-        # Show the allowed dhw_modes
-        if device["dev_class"] == "heater_central" and self._dhw_allowed_modes:
-            device_data["dhw_modes"] = self._dhw_allowed_modes
-            self._count += 1
-
-        # Check availability of non-legacy wired-connected devices
-        if not self._smile_legacy:
-            self._check_availability(device, device_data)
-
         # Switching groups data
         device_data = self._device_data_switching_group(device, device_data)
         # No need to obtain thermostat data when the device is not a thermostat
@@ -319,13 +302,6 @@ class Smile(SmileComm, SmileData):
             )
             raise ResponseError
 
-        # Check if Anna is connected to an Adam
-        if "159.2" in models:
-            LOGGER.error(
-                "Your Anna is connected to an Adam, make sure to only add the Adam as integration."
-            )
-            raise InvalidSetupError
-
         # Determine smile specifics
         await self._smile_detect(result, dsmrmain)
 
@@ -334,10 +310,13 @@ class Smile(SmileComm, SmileData):
 
         return True
 
-    async def _smile_detect_legacy(
-        self, result: etree, dsmrmain: etree, model: str
-    ) -> str:
-        """Helper-function for _smile_detect()."""
+    async def _smile_detect(self, result: etree, dsmrmain: etree) -> None:
+        """Helper-function for connect().
+
+        Detect which type of Smile is connected.
+        """
+        model: str = "Unknown"
+
         # Stretch: find the MAC of the zigbee master_controller (= Stick)
         if network := result.find("./module/protocols/master_controller"):
             self.smile_zigbee_mac_address = network.find("mac_address").text
@@ -380,23 +359,6 @@ class Smile(SmileComm, SmileData):
                 raise ResponseError
 
         self._smile_legacy = True
-        return model
-
-    async def _smile_detect(self, result: etree, dsmrmain: etree) -> None:
-        """Helper-function for connect().
-
-        Detect which type of Smile is connected.
-        """
-        model: str = "Unknown"
-        if (gateway := result.find("./gateway")) is not None:
-            if (v_model := gateway.find("vendor_model")) is not None:
-                model = v_model.text
-            self.smile_fw_version = gateway.find("firmware_version").text
-            self.smile_hw_version = gateway.find("hardware_version").text
-            self.smile_hostname = gateway.find("hostname").text
-            self.smile_mac_address = gateway.find("mac_address").text
-        else:
-            model = await self._smile_detect_legacy(result, dsmrmain, model)
 
         if model == "Unknown" or self.smile_fw_version is None:  # pragma: no cover
             # Corner case check
@@ -437,14 +399,6 @@ class Smile(SmileComm, SmileData):
             )
             self._on_off_device = onoff_boiler is not None
             self._opentherm_device = open_therm_boiler is not None
-
-            # Determine the presence of special features
-            locator_1 = "./gateway/features/cooling"
-            locator_2 = "./gateway/features/elga_support"
-            if result.find(locator_1) is not None:
-                self._cooling_present = True
-            if result.find(locator_2) is not None:
-                self._elga = True
 
     async def _update_domain_objects(self) -> None:
         """Helper-function for smile.py: full_update_device() and async_update().
