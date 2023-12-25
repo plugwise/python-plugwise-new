@@ -678,27 +678,14 @@ class TestPlugwise:  # pylint: disable=attribute-defined-outside-init
         assert smile.device_items == 44
         assert not self.notifications
 
-        result = await self.tinker_thermostat(
-            smile,
-            "0000aaaa0000aaaa0000aaaa0000aa00",
-            good_schedules=[
-                "Thermostat schedule",
-            ],
-        )
+        result = await self.tinker_thermostat(smile)
         assert result
         await smile.close_connection()
         await self.disconnect(server, client)
 
         server, smile, client = await self.connect_wrapper(raise_timeout=True)
         await self.device_test(smile, "2020-03-22 00:00:01", testdata)
-        result = await self.tinker_thermostat(
-            smile,
-            "0000aaaa0000aaaa0000aaaa0000aa00",
-            good_schedules=[
-                "Thermostat schedule",
-            ],
-            unhappy=True,
-        )
+        result = await self.tinker_thermostat(smile, unhappy=True)
         assert result
         await smile.close_connection()
         await self.disconnect(server, client)
@@ -776,40 +763,14 @@ class TestPlugwise:  # pylint: disable=attribute-defined-outside-init
         await self.device_test(smile, "2020-05-03 00:00:01", testdata)
 
         assert smile.gateway_id == "be81e3f8275b4129852c4d8d550ae2eb"
-        assert (
-            smile._last_active["be81e3f8275b4129852c4d8d550ae2eb"]
-            == "Thermostat schedule"
-        )
         assert smile.device_items == 44
         assert not self.notifications
 
-        result = await self.tinker_thermostat(
-            smile,
-            "be81e3f8275b4129852c4d8d550ae2eb",
-            good_schedules=[
-                "Thermostat schedule",
-            ],
-        )
+        result = await self.tinker_thermostat(smile)
         assert result
 
-        smile._schedule_old_states["be81e3f8275b4129852c4d8d550ae2eb"][
-            "Thermostat schedule"
-        ] = "off"
-        result_1 = await self.tinker_thermostat_schedule(
-            smile,
-            "be81e3f8275b4129852c4d8d550ae2eb",
-            "on",
-            good_schedules=["Thermostat schedule"],
-            single=True,
-        )
-        result_2 = await self.tinker_thermostat_schedule(
-            smile,
-            "be81e3f8275b4129852c4d8d550ae2eb",
-            "on",
-            good_schedules=["Thermostat schedule"],
-            single=True,
-        )
-        assert result_1 and result_2
+        result = await self.tinker_thermostat_schedule(smile, "on")
+        assert result
 
         await smile.close_connection()
         await self.disconnect(server, client)
