@@ -21,7 +21,6 @@ import semver
 from .constants import (
     ACTIVE_ACTUATORS,
     ACTUATOR_CLASSES,
-    ADAM,
     ANNA,
     APPLIANCES,
     ATTR_NAME,
@@ -29,7 +28,6 @@ from .constants import (
     BINARY_SENSORS,
     DATA,
     DEVICE_MEASUREMENTS,
-    DHW_SETPOINT,
     ENERGY_KILO_WATT_HOUR,
     ENERGY_WATT_HOUR,
     FAKE_APPL,
@@ -40,7 +38,6 @@ from .constants import (
     NONE,
     OBSOLETE_MEASUREMENTS,
     P1_LEGACY_MEASUREMENTS,
-    P1_MEASUREMENTS,
     POWER_WATT,
     SENSORS,
     SPECIAL_PLUG_TYPES,
