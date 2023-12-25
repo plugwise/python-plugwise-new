@@ -460,8 +460,11 @@ class Smile(SmileComm, SmileData):
         return PlugwiseData(self.gw_data, self.gw_devices)
 
     async def set_schedule_state(self, state: str) -> None:
-        """Helper-function for set_schedule_state()."""
-        # Input checking
+        """Activate/deactivate the Schedule.
+
+        Determined from - DOMAIN_OBJECTS.
+        Used in HA Core to set the hvac_mode: in practice switch between schedule on - off.
+        """
         if state not in ["on", "off"]:
             raise PlugwiseError("Plugwise: invalid schedule state.")
 
@@ -477,9 +480,6 @@ class Smile(SmileComm, SmileData):
         new_state = "false"
         if state == "on":
             new_state = "true"
-        # # If no state change is requested, do nothing
-        # if new_state == self._schedule_old_states[loc_id][name]:
-        #     return
 
         locator = f'.//*[@id="{schedule_rule_id}"]/template'
         for rule in self._domain_objects.findall(locator):
@@ -579,19 +579,6 @@ class Smile(SmileComm, SmileData):
         switch.device = "relay"
         switch.func_type = "relay_functionality"
         switch.func = "state"
-        if model == "dhw_cm_switch":
-            switch.device = "toggle"
-            switch.func_type = "toggle_functionality"
-            switch.act_type = "domestic_hot_water_comfort_mode"
-
-       # if model == "cooling_ena_switch":
-       #     switch.device = "toggle"
-       #     switch.func_type = "toggle_functionality"
-       #     switch.act_type = "cooling_enabled"
-
-       # if model == "lock":
-       #     switch.func = "lock"
-       #     state = "false" if state == "off" else "true"
 
         if self._stretch_v2:
             switch.actuator = "actuators"
