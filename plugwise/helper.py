@@ -12,8 +12,8 @@ from typing import cast
 from aiohttp import BasicAuth, ClientError, ClientResponse, ClientSession, ClientTimeout
 
 # Time related
-from dateutil import tz
-from dateutil.parser import parse
+# from dateutil import tz
+# from dateutil.parser import parse
 from defusedxml import ElementTree as etree
 from munch import Munch
 import semver
@@ -28,8 +28,8 @@ from .constants import (
     ATTR_UNIT_OF_MEASUREMENT,
     BINARY_SENSORS,
     DATA,
-    DEFAULT_PW_MAX,
-    DEFAULT_PW_MIN,
+    # DEFAULT_PW_MAX,
+    # DEFAULT_PW_MIN,
     DEVICE_MEASUREMENTS,
     DHW_SETPOINT,
     ENERGY_KILO_WATT_HOUR,
@@ -38,7 +38,7 @@ from .constants import (
     FAKE_LOC,
     HEATER_CENTRAL_MEASUREMENTS,
     LIMITS,
-    LOCATIONS,
+    # LOCATIONS,
     LOGGER,
     NONE,
     OBSOLETE_MEASUREMENTS,
@@ -51,7 +51,7 @@ from .constants import (
     SWITCHES,
     TEMP_CELSIUS,
     THERMOSTAT_CLASSES,
-    TOGGLES,
+    # TOGGLES,
     UOM,
     ActuatorData,
     ActuatorDataType,
@@ -64,7 +64,7 @@ from .constants import (
     SensorType,
     SwitchType,
     ThermoLoc,
-    ToggleNameType,
+    # ToggleNameType,
 )
 from .exceptions import (
     ConnectionFailedError,
@@ -222,17 +222,10 @@ class SmileHelper:
     def __init__(self) -> None:
         """Set the constructor for this class."""
         self._appliances: etree
-        self._cooling_activation_outdoor_temp: float
-        self._cooling_deactivation_threshold: float
-        self._cooling_present = False
         self._count: int
-        self._dhw_allowed_modes: list[str] = []
         self._domain_objects: etree
-        self._elga = False
         self._heater_id: str
         self._home_location: str
-        self._is_thermostat = False
-        self._last_active: dict[str, str | None] = {}
         self._last_modified: dict[str, str] = {}
         self._locations: etree
         self._loc_data: dict[str, ThermoLoc] = {}
@@ -241,28 +234,12 @@ class SmileHelper:
         self._on_off_device = False
         self._opentherm_device = False
         self._outdoor_temp: float
-        self._reg_allowed_modes: list[str] = []
-        self._schedule_old_states: dict[str, dict[str, str]] = {}
         self._smile_legacy = False
         self._status: etree
         self._stretch_v2 = False
         self._stretch_v3 = False
         self._system: etree
         self._thermo_locs: dict[str, ThermoLoc] = {}
-        ###################################################################
-        # '_cooling_enabled' can refer to the state of the Elga heatpump
-        # connected to an Anna. For Elga, 'elga_status_code' in [8, 9]
-        # means cooling mode is available, next to heating mode.
-        # 'elga_status_code' = 8 means cooling is active, 9 means idle.
-        #
-        # '_cooling_enabled' cam refer to the state of the Loria or
-        # Thermastage heatpump connected to an Anna. For these,
-        # 'cooling_enabled' = on means set to cooling mode, instead of to
-        # heating mode.
-        # 'cooling_state' = on means cooling is active.
-        ###################################################################
-        self._cooling_active = False
-        self._cooling_enabled = False
 
         self.device_items: int = 0
         self.device_list: list[str]
@@ -417,23 +394,6 @@ class SmileHelper:
             appl.name = self.smile_name
             appl.vendor_name = "Plugwise"
 
-            # Adam: look for the ZigBee MAC address of the Smile
-            if self.smile(ADAM) and (
-                found := self._modules.find(".//protocols/zig_bee_coordinator")
-            ):
-                appl.zigbee_mac = found.find("mac_address").text
-
-            # Adam: collect modes and check for cooling, indicating cooling-mode is present
-            reg_mode_list: list[str] = []
-            locator = "./actuator_functionalities/regulation_mode_control_functionality"
-            if (search := appliance.find(locator)) is not None:
-                if search.find("allowed_modes") is not None:
-                    for mode in search.find("allowed_modes"):
-                        reg_mode_list.append(mode.text)
-                        if mode.text == "cooling":
-                            self._cooling_present = True
-                    self._reg_allowed_modes = reg_mode_list
-
             return appl
 
         # Collect thermostat device info
@@ -475,20 +435,7 @@ class SmileHelper:
             appl.hardware = module_data["hardware_version"]
             appl.model = check_model(module_data["vendor_model"], appl.vendor_name)
             if appl.model is None:
-                appl.model = (
-                    "Generic heater/cooler"
-                    if self._cooling_present
-                    else "Generic heater"
-                )
-
-            # Anna + Loria: collect dhw control operation modes
-            dhw_mode_list: list[str] = []
-            locator = "./actuator_functionalities/domestic_hot_water_mode_control_functionality"
-            if (search := appliance.find(locator)) is not None:
-                if search.find("allowed_modes") is not None:
-                    for mode in search.find("allowed_modes"):
-                        dhw_mode_list.append(mode.text)
-                    self._dhw_allowed_modes = dhw_mode_list
+                appl.model = "Generic heater"
 
             return appl
 
@@ -700,7 +647,7 @@ class SmileHelper:
         return schedule_ids
 
     def _rule_ids_by_tag(self, tag: str, loc_id: str) -> dict[str, str]:
-        """Helper-function for _presets(), _schedules() and _last_active_schedule().
+        """Helper-function for _presets(), _schedules().
 
         Obtain the rule_id from the given template_tag and provide the location_id, when present.
         """
@@ -762,14 +709,6 @@ class SmileHelper:
                         data["sensors"][s_key] = s_value
                         # Anna: save cooling-related measurements for later use
                         # Use the local outdoor temperature as reference for turning cooling on/off
-                        if measurement == "cooling_activation_outdoor_temperature":
-                            self._cooling_activation_outdoor_temp = data["sensors"][
-                                "cooling_activation_outdoor_temperature"
-                            ]
-                        if measurement == "cooling_deactivation_threshold":
-                            self._cooling_deactivation_threshold = data["sensors"][
-                                "cooling_deactivation_threshold"
-                            ]
                         if measurement == "outdoor_air_temperature":
                             self._outdoor_temp = data["sensors"][
                                 "outdoor_air_temperature"
@@ -897,24 +836,6 @@ class SmileHelper:
             self._count += 1
             self._cooling_enabled = data["select_regulation_mode"] == "cooling"
 
-    def _cleanup_data(self, data: DeviceData) -> None:
-        """Helper-function for _get_measurement_data().
-
-        Clean up the data dict.
-        """
-        # Don't show cooling-related when no cooling present,
-        # but, keep cooling_enabled for Elga
-        if not self._cooling_present:
-            if "cooling_state" in data["binary_sensors"]:
-                data["binary_sensors"].pop("cooling_state")
-                self._count -= 1
-            if "cooling_ena_switch" in data["switches"]:
-                data["switches"].pop("cooling_ena_switch")  # pragma: no cover
-                self._count -= 1  # pragma: no cover
-            if not self._elga and "cooling_enabled" in data:
-                data.pop("cooling_enabled")  # pragma: no cover
-                self._count -= 1  # pragma: no cover
-
     def _process_c_heating_state(self, data: DeviceData) -> None:
         """Helper-function for _get_measurement_data().
 
@@ -938,10 +859,6 @@ class SmileHelper:
                     data["binary_sensors"]["cooling_state"] = data["c_heating_state"]
                 else:
                     data["binary_sensors"]["heating_state"] = data["c_heating_state"]
-
-        # Anna + Elga: use central_heating_state to show heating_state
-        if self._elga:
-            data["binary_sensors"]["heating_state"] = data["c_heating_state"]
 
     def _get_measurement_data(self, dev_id: str) -> DeviceData:
         """Helper-function for smile.py: _get_device_data().
@@ -978,44 +895,11 @@ class SmileHelper:
             # Collect availability-status for wireless connected devices to Adam
             self._wireless_availablity(appliance, data)
 
-        if dev_id == self.gateway_id and self.smile(ADAM):
-            self._get_regulation_mode(appliance, data)
-
         if "c_heating_state" in data:
             self._process_c_heating_state(data)
             # Remove c_heating_state after processing
             data.pop("c_heating_state")
             self._count -= 1
-
-        if self._is_thermostat and self.smile(ANNA) and dev_id == self._heater_id:
-            # Anna+Elga: base cooling_state on the elga-status-code
-            if "elga_status_code" in data:
-                # Techneco Elga has cooling-capability
-                self._cooling_present = True
-                data["model"] = "Generic heater/cooler"
-                self._cooling_enabled = data["elga_status_code"] in [8, 9]
-                data["binary_sensors"]["cooling_state"] = self._cooling_active = (
-                    data["elga_status_code"] == 8
-                )
-                data.pop("elga_status_code", None)
-                self._count -= 1
-                # Elga has no cooling-switch
-                if "cooling_ena_switch" in data["switches"]:
-                    data["switches"].pop("cooling_ena_switch")
-                    self._count -= 1
-
-            # Loria/Thermastage: cooling-related is based on cooling_state
-            # and modulation_level
-            else:
-                if self._cooling_present and "cooling_state" in data["binary_sensors"]:
-                    self._cooling_enabled = data["binary_sensors"]["cooling_state"]
-                    self._cooling_active = data["sensors"]["modulation_level"] == 100
-                    # For Loria the above does not work (pw-beta issue #301)
-                    if "cooling_ena_switch" in data["switches"]:
-                        self._cooling_enabled = data["switches"]["cooling_ena_switch"]
-                        self._cooling_active = data["binary_sensors"]["cooling_state"]
-
-        self._cleanup_data(data)
 
         return data
 
@@ -1331,7 +1215,6 @@ class SmileHelper:
             if active:
                 selected = name
 
-        self._last_active[location] = "".join(map(str, available))
         return available, selected
 
     def _object_value(self, obj_id: str, measurement: str) -> float | int | None:
