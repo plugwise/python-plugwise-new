@@ -320,11 +320,6 @@ class SmileHelper:
                 model_data["vendor_model"] = module.find("vendor_model").text
                 model_data["hardware_version"] = module.find("hardware_version").text
                 model_data["firmware_version"] = module.find("firmware_version").text
-                # Adam
-                if zb_node := module.find("./protocols/zig_bee_node"):
-                    model_data["zigbee_mac_address"] = zb_node.find("mac_address").text
-                    model_data["reachable"] = zb_node.find("reachable").text == "true"
-                # Stretches
                 if router := module.find("./protocols/network_router"):
                     model_data["zigbee_mac_address"] = router.find("mac_address").text
                 # Also look for the Circle+/Stealth M+
@@ -340,8 +335,6 @@ class SmileHelper:
         """
         if self.smile_type in ("power", "stretch"):
             locator = "./services/electricity_point_meter"
-            if not self._smile_legacy:
-                locator = "./logs/point_log/electricity_point_meter"
             mod_type = "electricity_point_meter"
 
             module_data = self._get_module_data(appliance, locator, mod_type)
@@ -356,22 +349,6 @@ class SmileHelper:
             if appl.hardware is not None:
                 hw_version = appl.hardware.replace("-", "")
                 appl.model = version_to_model(hw_version)
-            appl.firmware = module_data["firmware_version"]
-
-            return appl
-
-        if self.smile(ADAM):
-            locator = "./logs/interval_log/electricity_interval_meter"
-            mod_type = "electricity_interval_meter"
-            module_data = self._get_module_data(appliance, locator, mod_type)
-            # Filter appliance without zigbee_mac, it's an orphaned device
-            appl.zigbee_mac = module_data["zigbee_mac_address"]
-            if appl.zigbee_mac is None:
-                return None
-
-            appl.vendor_name = module_data["vendor_name"]
-            appl.model = check_model(module_data["vendor_model"], appl.vendor_name)
-            appl.hardware = module_data["hardware_version"]
             appl.firmware = module_data["firmware_version"]
 
             return appl
@@ -528,7 +505,7 @@ class SmileHelper:
             # Provide a location for legacy_anna, also don't assign the _home_location
             # to thermostat-devices without a location, they are not active
             elif (
-                self._smile_legacy and self.smile_type == "thermostat"
+                self.smile_type == "thermostat"
             ) or appl.pwclass not in THERMOSTAT_CLASSES:
                 appl.location = self._home_location
 
@@ -551,14 +528,6 @@ class SmileHelper:
             if appl.pwclass == "gateway" and self.smile_type == "power":
                 appl.dev_id = appl.location
 
-            # Don't show orphaned non-legacy thermostat-types or the OpenTherm Gateway.
-            if (
-                not self._smile_legacy
-                and appl.pwclass in THERMOSTAT_CLASSES
-                and appl.location is None
-            ):
-                continue
-
             self.gw_devices[appl.dev_id] = {"dev_class": appl.pwclass}
             self._count += 1
             for key, value in {
@@ -575,16 +544,6 @@ class SmileHelper:
                     appl_key = cast(ApplianceType, key)
                     self.gw_devices[appl.dev_id][appl_key] = value
                     self._count += 1
-
-        # For non-legacy P1 collect the connected SmartMeter info
-        if self.smile_type == "power":
-            self._p1_smartmeter_info_finder(appl)
-            # P1: for gateway and smartmeter switch device_id - part 2
-            for item in self.gw_devices:
-                if item != self.gateway_id:
-                    self.gateway_id = item
-                    # Leave for-loop to avoid a 2nd device_id switch
-                    break
 
         # Place the gateway and optional heater_central devices as 1st and 2nd
         for dev_class in ("heater_central", "gateway"):
@@ -625,38 +584,6 @@ class SmileHelper:
 
         return presets
 
-    def _rule_ids_by_name(self, name: str, loc_id: str) -> dict[str, str]:
-        """Helper-function for _presets().
-
-        Obtain the rule_id from the given name and and provide the location_id, when present.
-        """
-        schedule_ids: dict[str, str] = {}
-        locator = f'./contexts/context/zone/location[@id="{loc_id}"]'
-        for rule in self._domain_objects.findall(f'./rule[name="{name}"]'):
-            if rule.find(locator) is not None:
-                schedule_ids[rule.attrib["id"]] = loc_id
-            else:
-                schedule_ids[rule.attrib["id"]] = NONE
-
-        return schedule_ids
-
-    def _rule_ids_by_tag(self, tag: str, loc_id: str) -> dict[str, str]:
-        """Helper-function for _presets(), _schedules().
-
-        Obtain the rule_id from the given template_tag and provide the location_id, when present.
-        """
-        schedule_ids: dict[str, str] = {}
-        locator1 = f'./template[@tag="{tag}"]'
-        locator2 = f'./contexts/context/zone/location[@id="{loc_id}"]'
-        for rule in self._domain_objects.findall("./rule"):
-            if rule.find(locator1) is not None:
-                if rule.find(locator2) is not None:
-                    schedule_ids[rule.attrib["id"]] = loc_id
-                else:
-                    schedule_ids[rule.attrib["id"]] = NONE
-
-        return schedule_ids
-
     def _appliance_measurements(
         self,
         appliance: etree,
@@ -688,9 +615,6 @@ class SmileHelper:
                     measurement = new_name
 
                 match measurement:
-                    # measurements with states "on" or "off" that need to be passed directly
-                    case "select_dhw_mode":
-                        data["select_dhw_mode"] = appl_p_loc.text
                     case _ as measurement if measurement in BINARY_SENSORS:
                         bs_key = cast(BinarySensorType, measurement)
                         bs_value = appl_p_loc.text in ["on", "true"]
@@ -701,12 +625,6 @@ class SmileHelper:
                             appl_p_loc.text, getattr(attrs, ATTR_UNIT_OF_MEASUREMENT)
                         )
                         data["sensors"][s_key] = s_value
-                        # Anna: save cooling-related measurements for later use
-                        # Use the local outdoor temperature as reference for turning cooling on/off
-                        if measurement == "outdoor_air_temperature":
-                            self._outdoor_temp = data["sensors"][
-                                "outdoor_air_temperature"
-                            ]
                     case _ as measurement if measurement in SWITCHES:
                         sw_key = cast(SwitchType, measurement)
                         sw_value = appl_p_loc.text in ["on", "true"]
@@ -714,8 +632,6 @@ class SmileHelper:
                     case "c_heating_state":
                         value = appl_p_loc.text in ["on", "true"]
                         data["c_heating_state"] = value
-                    case "elga_status_code":
-                        data["elga_status_code"] = int(appl_p_loc.text)
 
             i_locator = f'.//logs/interval_log[type="{measurement}"]/period/measurement'
             if (appl_i_loc := appliance.find(i_locator)) is not None:
@@ -729,26 +645,6 @@ class SmileHelper:
         self._count += len(data["switches"])
         # Don't count the above top-level dicts, only the remaining single items
         self._count += len(data) - 3
-
-    def _wireless_availablity(self, appliance: etree, data: DeviceData) -> None:
-        """Helper-function for _get_measurement_data().
-
-        Collect the availablity-status for wireless connected devices.
-        """
-        if self.smile(ADAM):
-            # Collect for Plugs
-            locator = "./logs/interval_log/electricity_interval_meter"
-            mod_type = "electricity_interval_meter"
-            module_data = self._get_module_data(appliance, locator, mod_type)
-            if module_data["reachable"] is None:
-                # Collect for wireless thermostats
-                locator = "./logs/point_log[type='thermostat']/thermostat"
-                mod_type = "thermostat"
-                module_data = self._get_module_data(appliance, locator, mod_type)
-
-            if module_data["reachable"] is not None:
-                data["available"] = module_data["reachable"]
-                self._count += 1
 
     def _get_appliances_with_offset_functionality(self) -> list[str]:
         """Helper-function collecting all appliance that have offset_functionality."""
@@ -808,27 +704,8 @@ class SmileHelper:
                     self._count += 1
 
             if temp_dict:
-                # If domestic_hot_water_setpoint is present as actuator,
-                # rename and remove as sensor
-                if item == DHW_SETPOINT:
-                    item = "max_dhw_temperature"
-                    if DHW_SETPOINT in data["sensors"]:
-                        data["sensors"].pop(DHW_SETPOINT)
-                        self._count -= 1
-
                 act_item = cast(ActuatorType, item)
                 data[act_item] = temp_dict
-
-    def _get_regulation_mode(self, appliance: etree, data: DeviceData) -> None:
-        """Helper-function for _get_measurement_data().
-
-        Collect the gateway regulation_mode.
-        """
-        locator = "./actuator_functionalities/regulation_mode_control_functionality"
-        if (search := appliance.find(locator)) is not None:
-            data["select_regulation_mode"] = search.find("mode").text
-            self._count += 1
-            self._cooling_enabled = data["select_regulation_mode"] == "cooling"
 
     def _process_c_heating_state(self, data: DeviceData) -> None:
         """Helper-function for _get_measurement_data().
@@ -841,19 +718,6 @@ class SmileHelper:
             if self.smile(ANNA):
                 data["binary_sensors"]["heating_state"] = data["c_heating_state"]
 
-            # Adam + OnOff cooling: use central_heating_state to show heating/cooling_state
-            if self.smile(ADAM):
-                if "heating_state" not in data["binary_sensors"]:
-                    self._count += 1
-                data["binary_sensors"]["heating_state"] = False
-                if "cooling_state" not in data["binary_sensors"]:
-                    self._count += 1
-                data["binary_sensors"]["cooling_state"] = False
-                if self._cooling_enabled:
-                    data["binary_sensors"]["cooling_state"] = data["c_heating_state"]
-                else:
-                    data["binary_sensors"]["heating_state"] = data["c_heating_state"]
-
     def _get_measurement_data(self, dev_id: str) -> DeviceData:
         """Helper-function for smile.py: _get_device_data().
 
@@ -862,13 +726,8 @@ class SmileHelper:
         data: DeviceData = {"binary_sensors": {}, "sensors": {}, "switches": {}}
         # Get P1 smartmeter data from LOCATIONS or MODULES
         device = self.gw_devices[dev_id]
-        # !! DON'T CHANGE below two if-lines, will break stuff !!
-        if self.smile_type == "power":
-            if device["dev_class"] == "smartmeter":
-                if not self._smile_legacy:
-                    data.update(self._power_data_from_location(device["location"]))
-                else:
-                    data.update(self._power_data_from_modules())
+        if self.smile_type == "power" and device["dev_class"] == "smartmeter":
+            data.update(self._power_data_from_modules())
 
             return data
 
@@ -885,9 +744,6 @@ class SmileHelper:
 
             if appliance.find("type").text in ACTUATOR_CLASSES:
                 self._get_actuator_functionalities(appliance, device, data)
-
-            # Collect availability-status for wireless connected devices to Adam
-            self._wireless_availablity(appliance, data)
 
         if "c_heating_state" in data:
             self._process_c_heating_state(data)
@@ -1097,40 +953,6 @@ class SmileHelper:
         loc.f_val = power_data_local_format(loc.attrs, loc.key_string, val)
 
         return loc
-
-    def _power_data_from_location(self, loc_id: str) -> DeviceData:
-        """Helper-function for smile.py: _get_device_data().
-
-        Collect the power-data based on Location ID, from LOCATIONS.
-        """
-        direct_data: DeviceData = {"sensors": {}}
-        loc = Munch()
-        log_list: list[str] = ["point_log", "cumulative_log", "interval_log"]
-        peak_list: list[str] = ["nl_peak", "nl_offpeak"]
-        t_string = "tariff"
-
-        search = self._locations
-        loc.logs = search.find(f'./location[@id="{loc_id}"]/logs')
-        for loc.measurement, loc.attrs in P1_MEASUREMENTS.items():
-            for loc.log_type in log_list:
-                for loc.peak_select in peak_list:
-                    # meter_string = ".//{}[type='{}']/"
-                    loc.locator = (
-                        f'./{loc.log_type}[type="{loc.measurement}"]/period/'
-                        f'measurement[@{t_string}="{loc.peak_select}"]'
-                    )
-                    loc = self._power_data_peak_value(direct_data, loc)
-                    if not loc.found:
-                        continue
-
-                    direct_data = self.power_data_energy_diff(
-                        loc.measurement, loc.net_string, loc.f_val, direct_data
-                    )
-                    key = cast(SensorType, loc.key_string)
-                    direct_data["sensors"][key] = loc.f_val
-
-        self._count += len(direct_data["sensors"])
-        return direct_data
 
     def _power_data_from_modules(self) -> DeviceData:
         """Helper-function for smile.py: _get_device_data().
