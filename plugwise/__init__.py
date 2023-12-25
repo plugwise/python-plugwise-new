@@ -71,9 +71,7 @@ class SmileData(SmileHelper):
             if (
                 "binary_sensors" in device
                 and "plugwise_notification" in device["binary_sensors"]
-            ) or (
-                device_id == self.gateway_id and self._is_thermostat
-            ):
+            ) or (device_id == self.gateway_id and self._is_thermostat):
                 data["binary_sensors"]["plugwise_notification"] = bool(
                     self._notifications
                 )
@@ -102,9 +100,8 @@ class SmileData(SmileHelper):
             }
         )
         if self._is_thermostat:
-            self.gw_data.update({
-                "heater_id": self._heater_id, "cooling_present": False
-                }
+            self.gw_data.update(
+                {"heater_id": self._heater_id, "cooling_present": False}
             )
 
     def get_all_devices(self) -> None:
