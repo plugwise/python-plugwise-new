@@ -1008,7 +1008,6 @@ class SmileHelper:
 
         Collect available schedules/schedules for the legacy thermostat.
         """
-
         available: list[str] = [NONE]
         selected = NONE
         name: str | None = None
