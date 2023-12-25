@@ -106,8 +106,9 @@ class SmileData(SmileHelper):
             }
         )
         if self._is_thermostat:
-            self.gw_data.update(
-                {"heater_id": self._heater_id, "cooling_present": self._cooling_present}
+            self.gw_data.update({
+                "heater_id": self._heater_id, "cooling_present": False
+                }
             )
 
     def get_all_devices(self) -> None:
