@@ -615,8 +615,6 @@ class SmileHelper:
     def _presets(self) -> dict[str, list[float]]:
         """Helper-function for presets() - collect Presets for a legacy Anna."""
         presets: dict[str, list[float]] = {}
-        tag_1 = "zone_setpoint_and_state_based_on_preset"
-        tag_2 = "Thermostat presets"
         for directive in self._domain_objects.findall("rule/directives/when/then"):
             if directive is not None and directive.get("icon") is not None:
                 # Ensure list of heating_setpoint, cooling_setpoint
@@ -1190,7 +1188,6 @@ class SmileHelper:
         """
 
         available: list[str] = [NONE]
-        rule_ids: dict[str, str] = {}
         selected = NONE
         name: str | None = None
 
