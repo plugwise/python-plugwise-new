@@ -807,7 +807,7 @@ class SmileHelper:
                     device["dev_class"] = "thermo_sensor"
 
     def _thermostat_uri(self) -> str:
-        """Helper-function for _thermostat_uri().
+        """Helper-function for smile.py: set_temperature().
 
         Determine the location-set_temperature uri - from APPLIANCES.
         """
@@ -1004,7 +1004,7 @@ class SmileHelper:
         return active_rule["icon"]
 
     def _schedules(self, location: str) -> tuple[list[str], str]:
-        """Helper-function for _schedules().
+        """Helper-function for smile.py: _device_data_climate().
 
         Collect available schedules/schedules for the legacy thermostat.
         """
