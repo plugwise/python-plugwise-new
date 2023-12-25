@@ -733,7 +733,7 @@ class SmileHelper:
 
         # Get non-p1 data from APPLIANCES, for legacy from DOMAIN_OBJECTS.
         if self.smile_type == "power":
-            return
+            return data
 
         measurements = DEVICE_MEASUREMENTS
         if self._is_thermostat and dev_id == self._heater_id:
