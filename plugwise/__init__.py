@@ -16,7 +16,7 @@ from munch import Munch
 import semver
 
 from .constants import (
-    ADAM,
+    # ADAM,
     APPLIANCES,
     DEFAULT_PORT,
     DEFAULT_TIMEOUT,
@@ -185,8 +185,6 @@ class SmileData(SmileHelper):
                 loc_schedule_states[schedule] = (
                     "off" if device_data["mode"] == "auto" else "on"
                 )
-
-            self._schedule_old_states[loc_id] = loc_schedule_states
 
         return device_data
 
@@ -461,20 +459,13 @@ class Smile(SmileComm, SmileData):
         self._previous_day_number = day_number
         return PlugwiseData(self.gw_data, self.gw_devices)
 
-    async def set_schedule_state(
-        self, loc_id: str, name: str, status: str
-    ) -> None:
+    async def set_schedule_state(self, state: str) -> None:
         """Helper-function for set_schedule_state()."""
         # Input checking
-        if status not in ["on", "off"]:
+        if state not in ["on", "off"]:
             raise PlugwiseError("Plugwise: invalid schedule state.")
-        if name is None:
-            if schedule_name := self._last_active[loc_id]:
-                name = schedule_name
-            else:
-                return
 
-        assert isinstance(name, str)
+        name = "Thermostat schedule"
         schedule_rule_id: str | None = None
         for rule in self._domain_objects.findall("rule"):
             if rule.find("name").text == name:
@@ -484,11 +475,11 @@ class Smile(SmileComm, SmileData):
             raise PlugwiseError("Plugwise: no schedule with this name available.")
 
         new_state = "false"
-        if status == "on":
+        if state == "on":
             new_state = "true"
-        # If no state change is requested, do nothing
-        if new_state == self._schedule_old_states[loc_id][name]:
-            return
+        # # If no state change is requested, do nothing
+        # if new_state == self._schedule_old_states[loc_id][name]:
+        #     return
 
         locator = f'.//*[@id="{schedule_rule_id}"]/template'
         for rule in self._domain_objects.findall(locator):
@@ -502,7 +493,6 @@ class Smile(SmileComm, SmileData):
         )
 
         await self._request(uri, method="put", data=data)
-        self._schedule_old_states[loc_id][name] = new_state
 
     async def set_preset(self, preset: str) -> None:
         """Set the given Preset on the relevant Thermostat - from DOMAIN_OBJECTS."""
@@ -517,13 +507,8 @@ class Smile(SmileComm, SmileData):
 
         await self._request(RULES, method="put", data=data)
 
-    async def set_temperature(self, items: dict[str, float]) -> None:
+    async def set_temperature(self, setpoint: str) -> None:
         """Set the given Temperature on the relevant Thermostat."""
-        setpoint: float | None = None
-
-        if "setpoint" in items:
-            setpoint = items["setpoint"]
-
         if setpoint is None:
             raise PlugwiseError(
                 "Plugwise: failed setting temperature: no valid input provided"

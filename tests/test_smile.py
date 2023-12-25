@@ -484,14 +484,10 @@ class TestPlugwise:  # pylint: disable=attribute-defined-outside-init
         return tinker_switch_passed
 
     @pytest.mark.asyncio
-    async def tinker_thermostat_temp(
-        self, smile, loc_id, block_cooling=False, unhappy=False
-    ):
+    async def tinker_thermostat_temp(self, smile, unhappy=False):
         """Toggle temperature to test functionality."""
-        _LOGGER.info("Asserting modifying settings in location (%s):", loc_id)
-        test_temp = {"setpoint": 22.9}
-        if smile._cooling_present and not block_cooling:
-            test_temp = {"setpoint_low": 19.5, "setpoint_high": 23.5}
+        _LOGGER.info("Assert modifying temperature setpoint")
+        test_temp = 22.9
         _LOGGER.info("- Adjusting temperature to %s", test_temp)
         try:
             await smile.set_temperature(test_temp)
@@ -509,7 +505,7 @@ class TestPlugwise:  # pylint: disable=attribute-defined-outside-init
                 return True
 
     @pytest.mark.asyncio
-    async def tinker_thermostat_preset(self, smile, loc_id, unhappy=False):
+    async def tinker_thermostat_preset(self, smile, unhappy=False):
         """Toggle preset to test functionality."""
         for new_preset in ["asleep", "home", "!bogus"]:
             tinker_preset_passed = False
@@ -539,107 +535,43 @@ class TestPlugwise:  # pylint: disable=attribute-defined-outside-init
         return tinker_preset_passed
 
     @pytest.mark.asyncio
-    async def tinker_thermostat_schedule(
-        self, smile, loc_id, state, good_schedules=None, single=False, unhappy=False
-    ):
+    async def tinker_thermostat_schedule(self, smile, state, unhappy=False):
         """Toggle schedules to test functionality."""
-        if good_schedules != []:
-            if not single and ("!VeryBogusSchedule" not in good_schedules):
-                good_schedules.append("!VeryBogusSchedule")
-            for new_schedule in good_schedules:
-                tinker_schedule_passed = False
-                warning = ""
-                if new_schedule is not None and new_schedule[0] == "!":
-                    warning = " Negative test"
-                    new_schedule = new_schedule[1:]
-                _LOGGER.info("- Adjusting schedule to %s", f"{new_schedule}{warning}")
-                try:
-                    await smile.set_schedule_state(loc_id, state, new_schedule)
-                    tinker_schedule_passed = True
-                    _LOGGER.info("  + working as intended")
-                except pw_exceptions.PlugwiseError:
-                    _LOGGER.info("  + failed as expected")
-                    tinker_schedule_passed = True
-                except (
-                    pw_exceptions.ErrorSendingCommandError,
-                    pw_exceptions.ResponseError,
-                ):
-                    tinker_schedule_passed = False
-                    if unhappy:
-                        _LOGGER.info("  + failed as expected before intended failure")
-                        tinker_schedule_passed = True
-                    else:  # pragma: no cover
-                        _LOGGER.info("  - succeeded unexpectedly for some reason")
-                        return False
+        _LOGGER.info("- Adjusting schedule to state %s", state)
+        try:
+            await smile.set_schedule_state(state)
+            tinker_schedule_passed = True
+            _LOGGER.info("  + working as intended")
+        except pw_exceptions.PlugwiseError:
+            _LOGGER.info("  + failed as expected")
+            tinker_schedule_passed = True
+        except (
+            pw_exceptions.ErrorSendingCommandError,
+            pw_exceptions.ResponseError,
+        ):
+            tinker_schedule_passed = False
+            if unhappy:
+                _LOGGER.info("  + failed as expected before intended failure")
+                tinker_schedule_passed = True
+            else:  # pragma: no cover
+                _LOGGER.info("  - succeeded unexpectedly for some reason")
+                return False
 
-            return tinker_schedule_passed
+        return tinker_schedule_passed
 
         _LOGGER.info("- Skipping schedule adjustments")  # pragma: no cover
 
     @pytest.mark.asyncio
-    async def tinker_thermostat(
-        self,
-        smile,
-        loc_id,
-        schedule_on=True,
-        good_schedules=None,
-        single=False,
-        block_cooling=False,
-        unhappy=False,
-    ):
+    async def tinker_thermostat(self, smile, schedule_on=True, unhappy=False):
         """Toggle various climate settings to test functionality."""
-        if good_schedules is None:  # pragma: no cover
-            good_schedules = ["Weekschema"]
-
-        result_1 = await self.tinker_thermostat_temp(
-            smile, loc_id, block_cooling, unhappy
-        )
-        result_2 = await self.tinker_thermostat_preset(smile, loc_id, unhappy)
-        if smile._schedule_old_states != {}:
-            for item in smile._schedule_old_states[loc_id]:
-                smile._schedule_old_states[loc_id][item] = "off"
-        result_3 = await self.tinker_thermostat_schedule(
-            smile, loc_id, "on", good_schedules, single, unhappy
-        )
+        result_1 = await self.tinker_thermostat_temp(smile, unhappy)
+        result_2 = await self.tinker_thermostat_preset(smile, unhappy)
+        result_3 = await self.tinker_thermostat_schedule(smile, "on", unhappy)
         if schedule_on:
-            result_4 = await self.tinker_thermostat_schedule(
-                smile, loc_id, "off", good_schedules, single, unhappy
-            )
-            result_5 = await self.tinker_thermostat_schedule(
-                smile, loc_id, "on", good_schedules, single, unhappy
-            )
+            result_4 = await self.tinker_thermostat_schedule(smile, "off", unhappy)
+            result_5 = await self.tinker_thermostat_schedule(smile, "on", unhappy)
             return result_1 and result_2 and result_3 and result_4 and result_5
         return result_1 and result_2 and result_3
-
-    @staticmethod
-    async def tinker_dhw_mode(smile):
-        """Toggle dhw to test functionality."""
-        for mode in ["auto", "boost", "!bogus"]:
-            warning = ""
-            if mode[0] == "!":
-                warning = " Negative test"
-                mode = mode[1:]
-            _LOGGER.info("%s", f"- Adjusting dhw mode to {mode}{warning}")
-            try:
-                await smile.set_dhw_mode(mode)
-                _LOGGER.info("  + worked as intended")
-            except pw_exceptions.PlugwiseError:
-                _LOGGER.info("  + found invalid mode, as expected")
-
-    @staticmethod
-    async def tinker_regulation_mode(smile):
-        """Toggle regulation_mode to test functionality."""
-        for mode in ["off", "heating", "bleeding_cold", "!bogus"]:
-            warning = ""
-            if mode[0] == "!":
-                warning = " Negative test"
-                mode = mode[1:]
-            _LOGGER.info("%s", f"- Adjusting regulation mode to {mode}{warning}")
-            try:
-                await smile.set_regulation_mode(mode)
-                _LOGGER.info("  + worked as intended")
-            except pw_exceptions.PlugwiseError:
-                _LOGGER.info("  + found invalid mode, as expected")
 
     @staticmethod
     async def tinker_max_boiler_temp(smile):
