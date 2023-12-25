@@ -28,8 +28,6 @@ from .constants import (
     ATTR_UNIT_OF_MEASUREMENT,
     BINARY_SENSORS,
     DATA,
-    # DEFAULT_PW_MAX,
-    # DEFAULT_PW_MIN,
     DEVICE_MEASUREMENTS,
     DHW_SETPOINT,
     ENERGY_KILO_WATT_HOUR,
@@ -38,7 +36,6 @@ from .constants import (
     FAKE_LOC,
     HEATER_CENTRAL_MEASUREMENTS,
     LIMITS,
-    # LOCATIONS,
     LOGGER,
     NONE,
     OBSOLETE_MEASUREMENTS,
@@ -51,7 +48,6 @@ from .constants import (
     SWITCHES,
     TEMP_CELSIUS,
     THERMOSTAT_CLASSES,
-    # TOGGLES,
     UOM,
     ActuatorData,
     ActuatorDataType,
@@ -64,7 +60,6 @@ from .constants import (
     SensorType,
     SwitchType,
     ThermoLoc,
-    # ToggleNameType,
 )
 from .exceptions import (
     ConnectionFailedError,
@@ -226,6 +221,7 @@ class SmileHelper:
         self._domain_objects: etree
         self._heater_id: str
         self._home_location: str
+        self._is_thermostat = False
         self._last_modified: dict[str, str] = {}
         self._locations: etree
         self._loc_data: dict[str, ThermoLoc] = {}

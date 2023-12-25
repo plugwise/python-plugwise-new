@@ -74,10 +74,8 @@ class SmileData(SmileHelper):
             ) or (
                 device_id == self.gateway_id
                 and (
-                    self._is_thermostat
-                    or (self.smile_type == "power" and not self._smile_legacy)
-                )
-            ):
+                    self._is_thermostat or self.smile_type == "power"
+                ):
                 data["binary_sensors"]["plugwise_notification"] = bool(
                     self._notifications
                 )
@@ -389,9 +387,9 @@ class Smile(SmileComm, SmileData):
 
         if self.smile_type == "thermostat":
             self._is_thermostat = True
-            # For Adam, Anna, determine the system capabilities:
-            # Find the connected heating/cooling device (heater_central),
-            # e.g. heat-pump or gas-fired heater
+            # For Anna determine the system capabilities:
+            # Find the connected heating device (heater_central),
+            # e.g. a gas-fired heater
             onoff_boiler: etree = result.find("./module/protocols/onoff_boiler")
             open_therm_boiler: etree = result.find(
                 "./module/protocols/open_therm_boiler"
