@@ -723,13 +723,11 @@ class SmileHelper:
         data: DeviceData = {"binary_sensors": {}, "sensors": {}, "switches": {}}
         # Get P1 smartmeter data from LOCATIONS or MODULES
         device = self.gw_devices[dev_id]
-        if self.smile_type == "power" and device["dev_class"] == "smartmeter":
-            data.update(self._power_data_from_modules())
-
-            return data
-
-        # Get non-p1 data from APPLIANCES, for legacy from DOMAIN_OBJECTS.
+        # !! DON'T COMBINE below two if-lines, this will break stuff !!
         if self.smile_type == "power":
+            if device["dev_class"] == "smartmeter":
+                data.update(self._power_data_from_modules())
+
             return data
 
         measurements = DEVICE_MEASUREMENTS
