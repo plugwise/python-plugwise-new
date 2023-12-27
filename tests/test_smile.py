@@ -12,7 +12,7 @@ from pprint import PrettyPrinter
 # String generation
 import random
 import string
-from unittest.mock import patch
+# from unittest.mock import patch
 
 # Testing
 import aiohttp

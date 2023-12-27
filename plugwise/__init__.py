@@ -38,7 +38,7 @@ from .constants import (
     PlugwiseData,
 )
 from .exceptions import (
-    InvalidSetupError,
+    # InvalidSetupError,
     PlugwiseError,
     ResponseError,
     UnsupportedDeviceError,
